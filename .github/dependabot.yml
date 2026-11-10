@@ -12,6 +12,15 @@ updates:
       minor-and-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+    ignore:
+      # 插件运行在 DSH 宿主提供的 React 18 上，不能跟着升大版本
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react"
+        update-types: ["version-update:semver-major"]
+      # 类型定义必须跟随 engines 里的 Node 主版本（当前 22），否则会对不上运行时
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions 用到的 action 版本
   - package-ecosystem: "github-actions"
