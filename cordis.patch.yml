@@ -1,0 +1,5 @@
+# dsh-output 的 bundle 层：插入宿主插件（客户端半由 package.json 的 dsh.client 声明发现）。
+# 右栏「产出物」tab：汇总当前会话交付给用户的文件，可预览 / 用默认应用打开 / 在 Finder 中定位。
+- insert:
+    - id: dsh-output
+      name: '@kulebbb/dsh-output'

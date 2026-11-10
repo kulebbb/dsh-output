@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSH tokens 校验 · 浅色 / 深色并排</title>
+<style>
+/* ===== 内联 docs/tokens.css（单文件，无外部依赖） ===== */
+/*!
+ * DSH design tokens（提炼自 DeepSeek Harness 0.2.1-rc.5 客户端主题包）
+ * ---------------------------------------------------------------------------
+ * 来源（原始文件，未改色值，仅调整选择器宿主与排版）：
+ *   ~/.local/lib/node_modules/@deepseek-ai/dsh/node_modules/@deepseek-ai/
+ *     dsh-client-ui-theme/lib/client.js   :1407  base（字体/圆角/缓动）
+ *                                         :1413  design_platform（static 色板 + alias 语义变量，light/dark）
+ *                                         :1422  scrollbar
+ *                                         :1416  focus ring
+ *                                         :1425  gradient_shadow_text（阴影 / elevation / 字体预设）
+ * 真实主题机制：深色 = <body> 上的 data-ds-dark-theme 布尔属性
+ *   （dsh-client-ui-theme/lib/index.js:158 document.body.toggleAttribute('data-ds-dark-theme', dark)），
+ *   没有任何 [data-theme] / .dark / class 切换；prefers-color-scheme 只用于首帧前的解析。
+ *
+ * 选择器约定：
+ *   浅色 token 挂在 :root；深色 token 挂在 [data-ds-dark-theme]（DSH 自己放在 <body>，
+ *   这里不限标签，方便原型里给任意容器单独开深色做并排小样）。
+ *   深色块特异性高于 :root，因此 body[data-ds-dark-theme] 时深色胜出，与 DSH 行为一致。
+ */
+
+/* ==========================================================================
+ * 0. 基础变量：字体栈 / 等宽字体 / 圆角 / 缓动与时长
+ *    摘自 dsh-client-ui-theme/lib/client.js:1407（base_css_default）
+ * ========================================================================== */
+:root{
+  --dsh-font-family-text-default:-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --dsw-font-family:var(--dsh-font-family-text-default);
+  --dsw-font-family-brand:"Montserrat", var(--dsh-font-family-text-default);
+  --dsh-font-family-code-default:"SF Mono", "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", Menlo, Courier, "PingFang SC", "Microsoft YaHei";
+  --ds-font-family-code:var(--dsh-font-family-code-default);
+  --ds-ease-in-out:cubic-bezier(.4, 0, .2, 1);
+  --ds-transition-duration:.2s;
+  --ds-transition-duration-fast:.1s;
+  --ds-transition-duration-slow:.3s;
+  --dsw-radius-xs:4px;
+  --dsw-radius-sm:8px;
+  --dsw-radius-md:12px;
+  --dsw-radius-lg:16px;
+  --dsw-radius-xl:20px;
+  --dsw-radius-panel:28px;
+  --dsw-font-family:var(--dsh-font-family-text,var(--dsh-font-family-text-default)), var(--dsh-font-family-text-default);
+  --ds-font-family-code:var(--dsh-font-family-code,var(--dsh-font-family-code-default)), var(--dsh-font-family-code-default);
+  --dsw-alias-settings-card-fill:var(--dsw-alias-bg-layer-2);
+  --dsw-alias-settings-card-stroke:var(--dsw-alias-border-l4);
+  color-scheme: light;
+}
+[data-ds-dark-theme]{
+  color-scheme: dark;
+}
+
+/* ==========================================================================
+ * 1. 原始色板 --dsw-static-*（浅色）
+ *    摘自 client.js:1413 design_platform_css_default 第 1 个规则（body）
+ * ========================================================================== */
+:root{
+  --dsw-static-amber-100:#fef5e7;
+  --dsw-static-amber-400:#f7ad31;
+  --dsw-static-amber-500:#f59e0b;
+  --dsw-static-amber-600:#dd8629;
+  --dsw-static-amber-900:#27241f;
+  --dsw-static-blue-100:#dbeafe;
+  --dsw-static-blue-300:#93c5fd;
+  --dsw-static-blue-400:#60a5fa;
+  --dsw-static-blue-450:#4d93f8;
+  --dsw-static-blue-500:#3b82f6;
+  --dsw-static-blue-50:#eff6ff;
+  --dsw-static-blue-50p:#eaf3ff;
+  --dsw-static-blue-600:#2563eb;
+  --dsw-static-blue-75:#e5f0ff;
+  --dsw-static-blue-800:#1e40af;
+  --dsw-static-blue-900:#0e3074;
+  --dsw-static-blue-950:#172554;
+  --dsw-static-deepseek-100:#e4edfd;
+  --dsw-static-deepseek-200:#d3e2ff;
+  --dsw-static-deepseek-300:#b7c8fe;
+  --dsw-static-deepseek-400:#7aaaff;
+  --dsw-static-deepseek-450:#5686fe;
+  --dsw-static-deepseek-500:#4176e6;
+  --dsw-static-deepseek-50:#edf3fe;
+  --dsw-static-deepseek-600:#4868b2;
+  --dsw-static-deepseek-700-delete:#2f4c8f;
+  --dsw-static-deepseek-800:#34415b;
+  --dsw-static-deepseek-900:#283142;
+  --dsw-static-green-100:#e6faed;
+  --dsw-static-green-400:#4ed17e;
+  --dsw-static-green-500:#22c55e;
+  --dsw-static-green-500-a08:#22c55e14;
+  --dsw-static-green-500-a12:#22c55e1f;
+  --dsw-static-green-900:#233c2c;
+  --dsw-static-neutral-00:#fff;
+  --dsw-static-neutral-1000:#000;
+  --dsw-static-neutral-100:#f5f5f5;
+  --dsw-static-neutral-150:#ededed;
+  --dsw-static-neutral-200:#e5e5e5;
+  --dsw-static-neutral-250:#dcdcdc;
+  --dsw-static-neutral-300:#d4d4d4;
+  --dsw-static-neutral-400:#a2a4a6;
+  --dsw-static-neutral-500:#7f8287;
+  --dsw-static-neutral-50:#fafafa;
+  --dsw-static-neutral-550:#65676b;
+  --dsw-static-neutral-600:#545557;
+  --dsw-static-neutral-700:#3c3c3d;
+  --dsw-static-neutral-800:#292929;
+  --dsw-static-neutral-850:#212123;
+  --dsw-static-neutral-900:#0f0f0f;
+  --dsw-static-neutral-bluish-00:#fff;
+  --dsw-static-neutral-bluish-1000:#0f1115;
+  --dsw-static-neutral-bluish-100:#ebeef2;
+  --dsw-static-neutral-bluish-150:#e9ecf2;
+  --dsw-static-neutral-bluish-200:#e1e5ee;
+  --dsw-static-neutral-bluish-300:#cfd3d6;
+  --dsw-static-neutral-bluish-400:#adb2b8;
+  --dsw-static-neutral-bluish-500:#979da6;
+  --dsw-static-neutral-bluish-50:#f9fafb;
+  --dsw-static-neutral-bluish-600:#81858c;
+  --dsw-static-neutral-bluish-60:#f5f6f7;
+  --dsw-static-neutral-bluish-700:#61666b;
+  --dsw-static-neutral-bluish-750:#43454a;
+  --dsw-static-neutral-bluish-75:#f1f3f5;
+  --dsw-static-neutral-bluish-800:#353638;
+  --dsw-static-neutral-bluish-850:#2c2c2e;
+  --dsw-static-neutral-bluish-875:#232324;
+  --dsw-static-neutral-bluish-900:#1b1b1c;
+  --dsw-static-neutral-bluish-950:#151517;
+  --dsw-static-red-100:#fee2e2;
+  --dsw-static-red-400:#f25a5a;
+  --dsw-static-red-400-a12:#f25a5a1f;
+  --dsw-static-red-500:#ef4444;
+  --dsw-static-red-50:#fef2f2;
+  --dsw-static-red-600:#ec1313;
+  --dsw-static-red-600-a08:#ec131314;
+  --dsw-static-red-900:#570c0c;
+}
+
+/* ==========================================================================
+ * 2. 原始色板 --dsw-static-*（深色）
+ *    摘自 client.js:1413 第 2 个规则（body[data-ds-dark-theme]）
+ *    注意：只有 --dsw-static-neutral-bluish-60 与浅色不同（#f9fafb vs #f5f6f7）
+ * ========================================================================== */
+[data-ds-dark-theme]{
+  --dsw-static-amber-100:#fef5e7;
+  --dsw-static-amber-400:#f7ad31;
+  --dsw-static-amber-500:#f59e0b;
+  --dsw-static-amber-600:#dd8629;
+  --dsw-static-amber-900:#27241f;
+  --dsw-static-blue-100:#dbeafe;
+  --dsw-static-blue-300:#93c5fd;
+  --dsw-static-blue-400:#60a5fa;
+  --dsw-static-blue-450:#4d93f8;
+  --dsw-static-blue-500:#3b82f6;
+  --dsw-static-blue-50:#eff6ff;
+  --dsw-static-blue-50p:#eaf3ff;
+  --dsw-static-blue-600:#2563eb;
+  --dsw-static-blue-75:#e5f0ff;
+  --dsw-static-blue-800:#1e40af;
+  --dsw-static-blue-900:#0e3074;
+  --dsw-static-blue-950:#172554;
+  --dsw-static-deepseek-100:#e4edfd;
+  --dsw-static-deepseek-200:#d3e2ff;
+  --dsw-static-deepseek-300:#b7c8fe;
+  --dsw-static-deepseek-400:#7aaaff;
+  --dsw-static-deepseek-450:#5686fe;
+  --dsw-static-deepseek-500:#4176e6;
+  --dsw-static-deepseek-50:#edf3fe;
+  --dsw-static-deepseek-600:#4868b2;
+  --dsw-static-deepseek-700-delete:#2f4c8f;
+  --dsw-static-deepseek-800:#34415b;
+  --dsw-static-deepseek-900:#283142;
+  --dsw-static-green-100:#e6faed;
+  --dsw-static-green-400:#4ed17e;
+  --dsw-static-green-500:#22c55e;
+  --dsw-static-green-500-a08:#22c55e14;
+  --dsw-static-green-500-a12:#22c55e1f;
+  --dsw-static-green-900:#233c2c;
+  --dsw-static-neutral-00:#fff;
+  --dsw-static-neutral-1000:#000;
+  --dsw-static-neutral-100:#f5f5f5;
+  --dsw-static-neutral-150:#ededed;
+  --dsw-static-neutral-200:#e5e5e5;
+  --dsw-static-neutral-250:#dcdcdc;
+  --dsw-static-neutral-300:#d4d4d4;
+  --dsw-static-neutral-400:#a2a4a6;
+  --dsw-static-neutral-500:#7f8287;
+  --dsw-static-neutral-50:#fafafa;
+  --dsw-static-neutral-550:#65676b;
+  --dsw-static-neutral-600:#545557;
+  --dsw-static-neutral-700:#3c3c3d;
+  --dsw-static-neutral-800:#292929;
+  --dsw-static-neutral-850:#212123;
+  --dsw-static-neutral-900:#0f0f0f;
+  --dsw-static-neutral-bluish-00:#fff;
+  --dsw-static-neutral-bluish-1000:#0f1115;
+  --dsw-static-neutral-bluish-100:#ebeef2;
+  --dsw-static-neutral-bluish-150:#e9ecf2;
+  --dsw-static-neutral-bluish-200:#e1e5ee;
+  --dsw-static-neutral-bluish-300:#cfd3d6;
+  --dsw-static-neutral-bluish-400:#adb2b8;
+  --dsw-static-neutral-bluish-500:#979da6;
+  --dsw-static-neutral-bluish-50:#f9fafb;
+  --dsw-static-neutral-bluish-600:#81858c;
+  --dsw-static-neutral-bluish-60:#f9fafb;
+  --dsw-static-neutral-bluish-700:#61666b;
+  --dsw-static-neutral-bluish-750:#43454a;
+  --dsw-static-neutral-bluish-75:#f1f3f5;
+  --dsw-static-neutral-bluish-800:#353638;
+  --dsw-static-neutral-bluish-850:#2c2c2e;
+  --dsw-static-neutral-bluish-875:#232324;
+  --dsw-static-neutral-bluish-900:#1b1b1c;
+  --dsw-static-neutral-bluish-950:#151517;
+  --dsw-static-red-100:#fee2e2;
+  --dsw-static-red-400:#f25a5a;
+  --dsw-static-red-400-a12:#f25a5a1f;
+  --dsw-static-red-500:#ef4444;
+  --dsw-static-red-50:#fef2f2;
+  --dsw-static-red-600:#ec1313;
+  --dsw-static-red-600-a08:#ec131314;
+  --dsw-static-red-900:#570c0c;
+}
+
+/* ==========================================================================
+ * 3. 语义变量 --dsw-alias-* / --dsw-specific-*（浅色）
+ *    摘自 client.js:1413 第 3 个规则（body）
+ * ========================================================================== */
+:root{
+  --dsw-alias-bg-base:var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-bg-document-preview:var(--dsw-static-neutral-bluish-100);
+  --dsw-alias-bg-document-selection:color-mix(in srgb, var(--dsw-static-blue-500) 40%, transparent);
+  --dsw-alias-label-document-preview:var(--dsw-static-neutral-bluish-700);
+  --dsw-alias-bg-layer-1:var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-bg-layer-2:var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-bg-layer-3:var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-bg-mask-1:#0000003d;
+  --dsw-alias-bg-mask-2:#0000001f;
+  --dsw-alias-bg-mask-3:#0000007a;
+  --dsw-alias-bg-mask-photo:#000000e0;
+  --dsw-alias-bg-mask-drop:#ffffffb3;
+  --dsw-alias-bg-module-platform:var(--dsw-static-neutral-bluish-60);
+  --dsw-alias-bg-multi-select:var(--dsw-static-neutral-bluish-60);
+  --dsw-alias-bg-overlay:var(--dsw-static-neutral-bluish-150);
+  --dsw-alias-bg-skeleton:#0000000a;
+  --dsw-alias-border-inverted2:#0000;
+  --dsw-alias-border-inverted:#0000;
+  --dsw-alias-border-l1:#0000000a;
+  --dsw-alias-border-l2-darkmode-thin:#0000001a;
+  --dsw-alias-border-l2:#0000001a;
+  --dsw-alias-border-l3:#0000001f;
+  --dsw-alias-border-l4:#00000029;
+  --dsw-alias-brand-primary-invert:var(--dsw-static-neutral-bluish-1000);
+  --dsw-alias-brand-primary-new-colorprimary-new-color:#4176e6;
+  --dsw-alias-brand-primary:var(--dsw-static-neutral-bluish-1000);
+  --dsw-alias-brand-text:var(--dsw-static-neutral-bluish-1000);
+  --dsw-alias-button-contrast-fill:var(--dsw-static-neutral-bluish-700);
+  --dsw-alias-button-elevated-fill:var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-button-floating-fill:var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-button-floating-hover:var(--dsw-static-neutral-bluish-75);
+  --dsw-alias-button-ghost-active-border:var(--dsw-static-neutral-bluish-500);
+  --dsw-alias-button-ghost-active-fill:var(--dsw-static-neutral-bluish-100);
+  --dsw-alias-button-ghost-active-hover:var(--dsw-static-neutral-bluish-150);
+  --dsw-alias-button-info-fill:var(--dsw-static-deepseek-500);
+  --dsw-alias-button-info-hover:var(--dsw-static-deepseek-400);
+  --dsw-alias-button-primary-dimmed:var(--dsw-static-neutral-bluish-100);
+  --dsw-alias-button-primary-fill:var(--dsw-alias-brand-primary);
+  --dsw-alias-button-primary-hover:var(--dsw-static-neutral-bluish-750);
+  --dsw-alias-button-tool-bar-fill-invisible:#1f1f1f5c;
+  --dsw-alias-button-tool-bar-fill:#54555780;
+  --dsw-alias-button-tool-bar-hover:#54555799;
+  --dsw-alias-interactive-bg-active:#2631481a;
+  --dsw-alias-interactive-bg-hover-accent:#26314824;
+  --dsw-alias-interactive-bg-hover-danger:#ec13130d;
+  --dsw-alias-interactive-bg-hover-solid:var(--dsw-static-neutral-bluish-75);
+  --dsw-alias-interactive-bg-hover:#2631480f;
+  --dsw-alias-label-caption:var(--dsw-static-neutral-bluish-400);
+  --dsw-alias-label-deep-diving:color-mix(in srgb, var(--dsw-static-deepseek-500) 70%, var(--dsw-static-blue-950));
+  --dsw-alias-label-deep-diving-shimmer:color-mix(in srgb, var(--dsw-static-deepseek-500) 30%, var(--dsw-static-blue-950));
+  --dsw-alias-label-dimmed:var(--dsw-static-neutral-bluish-200);
+  --dsw-alias-label-primary-bluish:var(--dsw-static-blue-900);
+  --dsw-alias-label-primary-dimmed:var(--dsw-static-neutral-bluish-950);
+  --dsw-alias-label-primary-foreground:var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-label-primary-inverted:var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-label-primary:var(--dsw-static-neutral-bluish-1000);
+  --dsw-alias-label-secondary:var(--dsw-static-neutral-bluish-700);
+  --dsw-alias-label-shimmer:color-mix(in srgb, var(--dsw-static-neutral-1000) 30%, transparent);
+  --dsw-alias-label-tertiary:var(--dsw-static-neutral-bluish-600);
+  --dsw-alias-menu-icon:var(--dsw-static-neutral-bluish-800);
+  --dsw-alias-link:var(--dsw-static-deepseek-500);
+  --dsw-alias-markdown-citation:var(--dsw-static-neutral-bluish-100);
+  --dsw-alias-markdown-code-block-banner:var(--dsw-static-neutral-bluish-50);
+  --dsw-alias-markdown-code-block:var(--dsw-static-neutral-bluish-50);
+  --dsw-alias-markdown-code-segment-selected:var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-markdown-code-segment-unselected:var(--dsw-static-neutral-bluish-75);
+  --dsw-alias-markdown-inline-code:var(--dsw-static-neutral-50);
+  --dsw-alias-markdown-placeholder:var(--dsw-static-neutral-bluish-60);
+  --dsw-alias-markdown-tag:var(--dsw-static-neutral-bluish-75);
+  --dsw-alias-scrollbar-bg-l1:var(--dsw-static-neutral-200);
+  --dsw-alias-scrollbar-bg-l2:var(--dsw-static-neutral-200);
+  --dsw-alias-scrollbar-hover-l1:var(--dsw-static-neutral-300);
+  --dsw-alias-scrollbar-hover-l2:var(--dsw-static-neutral-300);
+  --dsw-alias-state-business-primary:var(--dsw-static-deepseek-500);
+  --dsw-alias-state-business-tertiary:var(--dsw-static-deepseek-100);
+  --dsw-alias-code-diff-added:var(--dsw-static-green-500-a08);
+  --dsw-alias-code-diff-deleted:var(--dsw-static-red-600-a08);
+  --dsw-alias-file-diff-added-bg:#e6f4e7;
+  --dsw-alias-file-diff-added-gutter:#edf7ed;
+  --dsw-alias-file-diff-added-marker:#01a241;
+  --dsw-alias-file-diff-deleted-bg:#fce6e2;
+  --dsw-alias-file-diff-deleted-gutter:#fdece9;
+  --dsw-alias-file-diff-deleted-marker:#ba2723;
+  --dsw-alias-state-error-primary:var(--dsw-static-red-600);
+  --dsw-alias-state-error-secondary:var(--dsw-static-red-400);
+  --dsw-alias-state-idle-primary:var(--dsw-static-neutral-300);
+  --dsw-alias-state-success-primary:var(--dsw-static-green-500);
+  --dsw-alias-state-success-secondary:var(--dsw-static-green-400);
+  --dsw-alias-state-success-tertiary:var(--dsw-static-green-100);
+  --dsw-alias-state-warn-label:var(--dsw-static-amber-600);
+  --dsw-alias-state-warn-primary:var(--dsw-static-amber-500);
+  --dsw-alias-state-warn-secondary:var(--dsw-static-amber-400);
+  --dsw-alias-state-warn-tertiary:var(--dsw-static-amber-100);
+  --dsw-alias-switch-thumb:var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-toast-bg:var(--dsw-static-neutral-bluish-800);
+  --dsw-alias-toast-label:var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-tooltip-bg:var(--dsw-static-neutral-bluish-850);
+  --dsw-alias-tooltip-key-bg:color-mix(in srgb, var(--dsw-alias-tooltip-bg), white 18%);
+  --dsw-alias-turn-trigger-bg:var(--dsw-alias-markdown-code-block);
+  --dsw-alias-turn-trigger-bg-hover:var(--dsw-alias-interactive-bg-hover);
+  --dsw-specific-bubble-highlight:var(--dsw-static-deepseek-200);
+  --dsw-specific-bubble:var(--dsw-static-deepseek-50);
+  --dsw-specific-input-major:var(--dsw-static-neutral-bluish-00);
+  --dsw-specific-login-input:var(--dsw-static-neutral-bluish-50);
+  --dsw-menu-surface-fill:#f8f9fa94;
+  --dsw-alias-menu-group-header-fill:#f8f9faf0;
+  --dsw-specific-menu:var(--dsw-menu-surface-fill);
+  --dsw-specific-selector:var(--dsw-static-neutral-bluish-60);
+  --dsw-specific-sidebar-fill:var(--dsw-static-neutral-bluish-50);
+  --dsw-specific-sidebar-nav-item-active-accent:var(--dsw-static-deepseek-100);
+  --dsw-specific-sidebar-nav-item-active:var(--dsw-static-neutral-bluish-100);
+  --dsw-specific-sidebar-nav-item-hover:var(--dsw-static-neutral-bluish-75);
+  --dsw-specific-tip:var(--dsw-static-neutral-bluish-60);
+}
+
+/* ==========================================================================
+ * 4. 语义变量 --dsw-alias-* / --dsw-specific-*（深色）
+ *    摘自 client.js:1413 第 4 个规则（body[data-ds-dark-theme]）
+ * ========================================================================== */
+[data-ds-dark-theme]{
+  --dsw-alias-bg-base:var(--dsw-static-neutral-bluish-950);
+  --dsw-alias-bg-document-preview:var(--dsw-static-neutral-bluish-950);
+  --dsw-alias-bg-document-selection:color-mix(in srgb, var(--dsw-static-blue-500) 40%, transparent);
+  --dsw-alias-label-document-preview:var(--dsw-static-neutral-bluish-300);
+  --dsw-alias-bg-layer-1:var(--dsw-static-neutral-bluish-875);
+  --dsw-alias-bg-layer-2:var(--dsw-static-neutral-bluish-850);
+  --dsw-alias-bg-layer-3:var(--dsw-static-neutral-bluish-800);
+  --dsw-alias-bg-mask-1:#00000080;
+  --dsw-alias-bg-mask-2:#0003;
+  --dsw-alias-bg-mask-3:#0000007a;
+  --dsw-alias-bg-mask-photo:#000000e0;
+  --dsw-alias-bg-mask-drop:#272730b3;
+  --dsw-alias-bg-module-platform:var(--dsw-static-neutral-bluish-800);
+  --dsw-alias-bg-multi-select:var(--dsw-static-neutral-850);
+  --dsw-alias-bg-overlay:var(--dsw-static-neutral-bluish-700);
+  --dsw-alias-bg-skeleton:#ffffff14;
+  --dsw-alias-border-inverted2:#ffffff14;
+  --dsw-alias-border-inverted:#ffffff0f;
+  --dsw-alias-border-l1:#ffffff0f;
+  --dsw-alias-border-l2-darkmode-thin:#ffffff0f;
+  --dsw-alias-border-l2:#ffffff1f;
+  --dsw-alias-border-l3:#ffffff29;
+  --dsw-alias-border-l4:#fff3;
+  --dsw-alias-brand-primary-invert:var(--dsw-static-neutral-bluish-50);
+  --dsw-alias-brand-primary-new-colorprimary-new-color:var(--dsw-static-deepseek-450);
+  --dsw-alias-brand-primary:var(--dsw-static-neutral-bluish-50);
+  --dsw-alias-brand-text:var(--dsw-static-neutral-bluish-50);
+  --dsw-alias-button-contrast-fill:var(--dsw-static-neutral-bluish-50);
+  --dsw-alias-button-elevated-fill:var(--dsw-static-neutral-bluish-750);
+  --dsw-alias-button-floating-fill:var(--dsw-static-neutral-bluish-850);
+  --dsw-alias-button-floating-hover:var(--dsw-static-neutral-bluish-800);
+  --dsw-alias-button-ghost-active-border:var(--dsw-static-neutral-bluish-600);
+  --dsw-alias-button-ghost-active-fill:var(--dsw-static-neutral-bluish-750);
+  --dsw-alias-button-ghost-active-hover:var(--dsw-static-neutral-bluish-700);
+  --dsw-alias-button-info-fill:var(--dsw-static-deepseek-400);
+  --dsw-alias-button-info-hover:var(--dsw-static-deepseek-500);
+  --dsw-alias-button-primary-dimmed:var(--dsw-static-neutral-bluish-750);
+  --dsw-alias-button-primary-fill:var(--dsw-alias-brand-primary);
+  --dsw-alias-button-primary-hover:var(--dsw-static-neutral-bluish-100);
+  --dsw-alias-button-tool-bar-fill-invisible:#1f1f1f5c;
+  --dsw-alias-button-tool-bar-fill:#54555780;
+  --dsw-alias-button-tool-bar-hover:#54555799;
+  --dsw-alias-interactive-bg-active:#ffffff24;
+  --dsw-alias-interactive-bg-hover-accent:#ffffff3d;
+  --dsw-alias-interactive-bg-hover-danger:#f25a5a26;
+  --dsw-alias-interactive-bg-hover-solid:var(--dsw-static-neutral-bluish-800);
+  --dsw-alias-interactive-bg-hover:#ffffff14;
+  --dsw-alias-label-caption:var(--dsw-static-neutral-bluish-600);
+  --dsw-alias-label-deep-diving:color-mix(in srgb, var(--dsw-static-deepseek-450) 55%, var(--dsw-static-neutral-bluish-400));
+  --dsw-alias-label-deep-diving-shimmer:color-mix(in srgb, var(--dsw-static-blue-300) 65%, var(--dsw-static-deepseek-400));
+  --dsw-alias-label-dimmed:var(--dsw-static-neutral-bluish-750);
+  --dsw-alias-label-primary-bluish:var(--dsw-static-neutral-bluish-50);
+  --dsw-alias-label-primary-dimmed:var(--dsw-static-neutral-bluish-100);
+  --dsw-alias-label-primary-foreground:var(--dsw-static-neutral-bluish-1000);
+  --dsw-alias-label-primary-inverted:var(--dsw-static-neutral-bluish-800);
+  --dsw-alias-label-primary:var(--dsw-static-neutral-bluish-50);
+  --dsw-alias-label-secondary:var(--dsw-static-neutral-bluish-300);
+  --dsw-alias-label-shimmer:color-mix(in srgb, var(--dsw-static-neutral-00) 45%, transparent);
+  --dsw-alias-label-tertiary:var(--dsw-static-neutral-bluish-400);
+  --dsw-alias-menu-icon:var(--dsw-alias-label-primary-dimmed);
+  --dsw-alias-link:var(--dsw-static-deepseek-400);
+  --dsw-alias-markdown-citation:var(--dsw-static-neutral-bluish-800);
+  --dsw-alias-markdown-code-block-banner:var(--dsw-static-neutral-bluish-850);
+  --dsw-alias-markdown-code-block:var(--dsw-static-neutral-bluish-900);
+  --dsw-alias-markdown-code-segment-selected:var(--dsw-static-neutral-bluish-800);
+  --dsw-alias-markdown-code-segment-unselected:var(--dsw-static-neutral-bluish-900);
+  --dsw-alias-markdown-inline-code:var(--dsw-static-neutral-800);
+  --dsw-alias-markdown-placeholder:var(--dsw-static-neutral-bluish-850);
+  --dsw-alias-markdown-tag:var(--dsw-static-neutral-bluish-850);
+  --dsw-alias-scrollbar-bg-l1:var(--dsw-static-neutral-700);
+  --dsw-alias-scrollbar-bg-l2:var(--dsw-static-neutral-600);
+  --dsw-alias-scrollbar-hover-l1:var(--dsw-static-neutral-600);
+  --dsw-alias-scrollbar-hover-l2:var(--dsw-static-neutral-550);
+  --dsw-alias-state-business-primary:var(--dsw-static-deepseek-400);
+  --dsw-alias-state-business-tertiary:var(--dsw-static-deepseek-800);
+  --dsw-alias-code-diff-added:var(--dsw-static-green-500-a12);
+  --dsw-alias-code-diff-deleted:var(--dsw-static-red-400-a12);
+  --dsw-alias-file-diff-added-bg:#1f3124;
+  --dsw-alias-file-diff-added-gutter:#132016;
+  --dsw-alias-file-diff-added-marker:#41c977;
+  --dsw-alias-file-diff-deleted-bg:#3c1f1b;
+  --dsw-alias-file-diff-deleted-gutter:#28130e;
+  --dsw-alias-file-diff-deleted-marker:#fa423e;
+  --dsw-alias-state-error-primary:var(--dsw-static-red-400);
+  --dsw-alias-state-error-secondary:var(--dsw-static-red-400);
+  --dsw-alias-state-idle-primary:var(--dsw-static-neutral-600);
+  --dsw-alias-state-success-primary:var(--dsw-static-green-500);
+  --dsw-alias-state-success-secondary:var(--dsw-static-green-400);
+  --dsw-alias-state-success-tertiary:var(--dsw-static-green-900);
+  --dsw-alias-state-warn-label:var(--dsw-static-amber-600);
+  --dsw-alias-state-warn-primary:var(--dsw-static-amber-500);
+  --dsw-alias-state-warn-secondary:var(--dsw-static-amber-400);
+  --dsw-alias-state-warn-tertiary:var(--dsw-static-amber-900);
+  --dsw-alias-switch-thumb:var(--dsw-static-neutral-bluish-400);
+  --dsw-alias-toast-bg:var(--dsw-static-neutral-bluish-750);
+  --dsw-alias-toast-label:var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-turn-trigger-bg:var(--dsw-alias-interactive-bg-hover);
+  --dsw-alias-turn-trigger-bg-hover:var(--dsw-alias-interactive-bg-active);
+  --dsw-alias-tooltip-bg:var(--dsw-static-neutral-bluish-750);
+  --dsw-alias-tooltip-key-bg:color-mix(in srgb, var(--dsw-alias-tooltip-bg), white 18%);
+  --dsw-specific-bubble-highlight:var(--dsw-static-neutral-bluish-750);
+  --dsw-specific-bubble:var(--dsw-static-neutral-bluish-850);
+  --dsw-specific-input-major:var(--dsw-static-neutral-bluish-850);
+  --dsw-specific-login-input:var(--dsw-static-neutral-bluish-900);
+  --dsw-menu-surface-fill:#43454a73;
+  --dsw-alias-menu-group-header-fill:#303136f0;
+  --dsw-specific-menu:var(--dsw-menu-surface-fill);
+  --dsw-specific-selector:var(--dsw-static-neutral-bluish-800);
+  --dsw-specific-sidebar-fill:var(--dsw-static-neutral-bluish-900);
+  --dsw-specific-sidebar-nav-item-active-accent:var(--dsw-static-neutral-bluish-800);
+  --dsw-specific-sidebar-nav-item-active:var(--dsw-static-neutral-bluish-750);
+  --dsw-specific-sidebar-nav-item-hover:var(--dsw-static-neutral-bluish-850);
+  --dsw-specific-tip:var(--dsw-static-neutral-bluish-800);
+}
+
+/* ==========================================================================
+ * 5. macOS 菜单材质覆盖（原样保留两个规则）
+ *    摘自 client.js:1413 第 5、6 个规则
+ * ========================================================================== */
+html[data-platform="darwin"] body{
+  --dsw-specific-menu:#f8f9faf0;
+}
+html[data-platform="darwin"] body[data-ds-dark-theme]{
+  --dsw-specific-menu:#303136f0;
+}
+
+/* ==========================================================================
+ * 6. 阴影 / elevation / 菜单材质
+ *    摘自 client.js:1425（gradient_shadow_text_css_default）
+ * ========================================================================== */
+:root{
+  --dsw-linear-gradient-think:linear-gradient(180deg, #fff 20.19%, #fff0 100%);
+  --dsw-linear-think-select:linear-gradient(180deg, #f5f6f7 20.19%, #f5f6f700 100%);
+  --dsw-shadow-lv1:0 2px 4px 0 #0000000d;
+  --dsw-shadow-lv1-blur:0 4px 12px 0 #00000005;
+  --dsw-shadow-lv2:0 4px 12px 0 #00000005, 0 2px 8px 0 #0000000a;
+  --dsw-shadow-lv3:0 0 1px 0 #0003, 0 0 4px 0 #00000005, 0 12px 32px 0 #00000014;
+  --dsw-elevation-stroke-color:var(--dsw-alias-border-l4);
+  --dsw-mask-blur:none;
+  --dsw-menu-backdrop-filter:blur(40px) saturate(150%);
+}
+[data-ds-dark-theme]{
+  --dsw-linear-gradient-think:linear-gradient(180deg, #151517 20.19%, #15151700 100%);
+  --dsw-linear-think-select:linear-gradient(180deg, #232325 20.19%, #23232500 100%);
+}
+[data-ds-dark-theme] [data-menu-material]{
+  --dsw-elevation-stroke-color:var(--dsw-alias-border-l3);
+}
+body,
+body *{
+  --dsw-elevation-stroke:0 0 0 .5px var(--dsw-elevation-stroke-color);
+  --dsw-elevation-panel:var(--dsw-elevation-stroke), 0 3px 8px 0 #00000008, 0 0 16px 0 #00000005;
+  --dsw-elevation-prominent:var(--dsw-elevation-stroke), 0 3px 8px 0 #0000000a, 0 0 20px 0 #0000000d;
+  --dsw-elevation-soft:var(--dsw-elevation-stroke), 0 4px 16px 0 #00000008, 0 0 24px 0 #00000008;
+}
+
+/* ==========================================================================
+ * 7. 排版预设与内容字号变量
+ *    摘自 client.js:1425（常用 role 的 --dsw-font-*，其余 markdown h1-h3 未引入）
+ * ========================================================================== */
+:root{
+  --dsh-content-font-delta:calc(var(--dsh-content-font-size,14px) - 14px);
+  --dsh-content-font-size-secondary:min(calc(var(--dsh-content-font-size,14px) - 1px), max(13px, calc(var(--dsh-content-font-size,14px) - 2px)));
+  --dsh-content-font-delta-secondary:calc(var(--dsh-content-font-size-secondary) - 13px);
+  --dsh-code-font-delta:calc(var(--dsh-code-font-size,11px) - 11px);
+  --dsw-font-markdown-base:var(--dsh-content-font-size,14px) / calc(24px + var(--dsh-content-font-delta)) var(--dsw-font-family);
+  --dsw-font-markdown-base-font-family:var(--dsw-font-family);
+  --dsw-font-markdown-base-font-weight:400;
+  --dsw-font-markdown-base-line-height:calc(24px + var(--dsh-content-font-delta));
+  --dsw-font-markdown-base-font-size:var(--dsh-content-font-size,14px);
+  --dsw-font-markdown-base-font-style:normal;
+  --dsw-font-markdown-base-strong:600 var(--dsh-content-font-size,14px) / calc(24px + var(--dsh-content-font-delta)) var(--dsw-font-family);
+  --dsw-font-markdown-base-strong-font-family:var(--dsw-font-family);
+  --dsw-font-markdown-base-strong-font-weight:600;
+  --dsw-font-markdown-base-strong-line-height:calc(24px + var(--dsh-content-font-delta));
+  --dsw-font-markdown-base-strong-font-size:var(--dsh-content-font-size,14px);
+  --dsw-font-markdown-base-strong-font-style:normal;
+  --dsw-font-markdown-base-italic:italic var(--dsh-content-font-size,14px) / calc(24px + var(--dsh-content-font-delta)) var(--dsw-font-family);
+  --dsw-font-markdown-base-italic-font-family:var(--dsw-font-family);
+  --dsw-font-markdown-base-italic-font-weight:400;
+  --dsw-font-markdown-base-italic-line-height:calc(24px + var(--dsh-content-font-delta));
+  --dsw-font-markdown-base-italic-font-size:var(--dsh-content-font-size,14px);
+  --dsw-font-markdown-base-italic-font-style:italic;
+  --dsw-font-markdown-base-strong-italic:italic 600 var(--dsh-content-font-size,14px) / calc(24px + var(--dsh-content-font-delta)) var(--dsw-font-family);
+  --dsw-font-markdown-base-strong-italic-font-family:var(--dsw-font-family);
+  --dsw-font-markdown-base-strong-italic-font-weight:600;
+  --dsw-font-markdown-base-strong-italic-line-height:calc(24px + var(--dsh-content-font-delta));
+  --dsw-font-markdown-base-strong-italic-font-size:var(--dsh-content-font-size,14px);
+  --dsw-font-markdown-base-strong-italic-font-style:italic;
+  --dsw-font-markdown-code:calc(12px + var(--dsh-code-font-delta)) / calc(19px + var(--dsh-code-font-delta)) var(--ds-font-family-code);
+  --dsw-font-markdown-code-font-family:var(--ds-font-family-code);
+  --dsw-font-markdown-code-font-weight:400;
+  --dsw-font-markdown-code-line-height:calc(19px + var(--dsh-code-font-delta));
+  --dsw-font-markdown-code-font-size:calc(12px + var(--dsh-code-font-delta));
+  --dsw-font-markdown-code-font-style:normal;
+  --dsw-font-markdown-code-block:var(--dsh-code-font-size,11px) / calc(19px + var(--dsh-code-font-delta)) var(--ds-font-family-code);
+  --dsw-font-markdown-code-block-font-family:var(--ds-font-family-code);
+  --dsw-font-markdown-code-block-font-weight:400;
+  --dsw-font-markdown-code-block-line-height:calc(19px + var(--dsh-code-font-delta));
+  --dsw-font-markdown-code-block-font-size:var(--dsh-code-font-size,11px);
+  --dsw-font-markdown-code-block-font-style:normal;
+  --dsw-font-markdown-code-block-small:var(--dsh-code-font-size,11px) / calc(16px + var(--dsh-code-font-delta)) var(--ds-font-family-code);
+  --dsw-font-markdown-code-block-small-font-family:var(--ds-font-family-code);
+  --dsw-font-markdown-code-block-small-font-weight:400;
+  --dsw-font-markdown-code-block-small-line-height:calc(16px + var(--dsh-code-font-delta));
+  --dsw-font-markdown-code-block-small-font-size:var(--dsh-code-font-size,11px);
+  --dsw-font-markdown-code-block-small-font-style:normal;
+  --dsw-font-base-16:16px/24px var(--dsw-font-family);
+  --dsw-font-base-16-font-family:var(--dsw-font-family);
+  --dsw-font-base-16-font-weight:400;
+  --dsw-font-base-16-line-height:24px;
+  --dsw-font-base-16-font-size:16px;
+  --dsw-font-base-16-font-style:normal;
+  --dsw-font-base-strong-16:500 16px/24px var(--dsw-font-family);
+  --dsw-font-base-strong-16-font-family:var(--dsw-font-family);
+  --dsw-font-base-strong-16-font-weight:500;
+  --dsw-font-base-strong-16-line-height:24px;
+  --dsw-font-base-strong-16-font-size:16px;
+  --dsw-font-base-strong-16-font-style:normal;
+  --dsw-font-s-14:14px/22px var(--dsw-font-family);
+  --dsw-font-s-14-font-family:var(--dsw-font-family);
+  --dsw-font-s-14-font-weight:400;
+  --dsw-font-s-14-line-height:22px;
+  --dsw-font-s-14-font-size:14px;
+  --dsw-font-s-14-font-style:normal;
+  --dsw-font-s-strong-14:500 14px/22px var(--dsw-font-family);
+  --dsw-font-s-strong-14-font-family:var(--dsw-font-family);
+  --dsw-font-s-strong-14-font-weight:500;
+  --dsw-font-s-strong-14-line-height:22px;
+  --dsw-font-s-strong-14-font-size:14px;
+  --dsw-font-s-strong-14-font-style:normal;
+  --dsw-font-xs-13:13px/20px var(--dsw-font-family);
+  --dsw-font-xs-13-font-family:var(--dsw-font-family);
+  --dsw-font-xs-13-font-weight:400;
+  --dsw-font-xs-13-line-height:20px;
+  --dsw-font-xs-13-font-size:13px;
+  --dsw-font-xs-13-font-style:normal;
+  --dsw-font-xs-strong-13:500 13px/20px var(--dsw-font-family);
+  --dsw-font-xs-strong-13-font-family:var(--dsw-font-family);
+  --dsw-font-xs-strong-13-font-weight:500;
+  --dsw-font-xs-strong-13-line-height:20px;
+  --dsw-font-xs-strong-13-font-size:13px;
+  --dsw-font-xs-strong-13-font-style:normal;
+  --dsw-font-xxs-12:12px/18px var(--dsw-font-family);
+  --dsw-font-xxs-12-font-family:var(--dsw-font-family);
+  --dsw-font-xxs-12-font-weight:400;
+  --dsw-font-xxs-12-line-height:18px;
+  --dsw-font-xxs-12-font-size:12px;
+  --dsw-font-xxs-12-font-style:normal;
+  --dsw-font-xxs-strong-12:500 12px/18px var(--dsw-font-family);
+  --dsw-font-xxs-strong-12-font-family:var(--dsw-font-family);
+  --dsw-font-xxs-strong-12-font-weight:500;
+  --dsw-font-xxs-strong-12-line-height:18px;
+  --dsw-font-xxs-strong-12-font-size:12px;
+  --dsw-font-xxs-strong-12-font-style:normal;
+  --dsw-font-xxxs-11:11px/14px var(--dsw-font-family);
+  --dsw-font-xxxs-11-font-family:var(--dsw-font-family);
+  --dsw-font-xxxs-11-font-weight:400;
+  --dsw-font-xxxs-11-line-height:14px;
+  --dsw-font-xxxs-11-font-size:11px;
+  --dsw-font-xxxs-11-font-style:normal;
+  --dsw-font-xxxs-strong-11:500 11px/14px var(--dsw-font-family);
+  --dsw-font-xxxs-strong-11-font-family:var(--dsw-font-family);
+  --dsw-font-xxxs-strong-11-font-weight:500;
+  --dsw-font-xxxs-strong-11-line-height:14px;
+  --dsw-font-xxxs-strong-11-font-size:11px;
+  --dsw-font-xxxs-strong-11-font-style:normal;
+}
+
+/* ==========================================================================
+ * 8. 滚动条（原样保留，宽度 5px / 圆角胶囊 thumb）
+ *    摘自 client.js:1422（scrollbar_css_default）
+ * ========================================================================== */
+body{--dsh-scrollbar-thumb:var(--dsw-alias-scrollbar-bg-l1);--dsh-scrollbar-thumb-hover:var(--dsw-alias-scrollbar-hover-l1);--dsh-scrollbar-thumb-border:0px;--dsh-scrollbar-track-margin:0px;--dsh-scrollbar-width:5px}@supports not selector(::-webkit-scrollbar){body,body *{scrollbar-width:thin;scrollbar-color:var(--dsh-scrollbar-thumb) transparent}}::-webkit-scrollbar{width:var(--dsh-scrollbar-width);height:var(--dsh-scrollbar-width)}::-webkit-scrollbar-track{margin-block:var(--dsh-scrollbar-track-margin);background:0 0}::-webkit-scrollbar-thumb{border:var(--dsh-scrollbar-thumb-border) solid transparent;corner-shape:round;background:var(--dsh-scrollbar-thumb);background-clip:content-box;border-radius:999px}::-webkit-scrollbar-thumb:hover{background-color:var(--dsh-scrollbar-thumb-hover)}::-webkit-scrollbar-corner{background:0 0}
+
+/* ==========================================================================
+ * 9. 焦点环
+ *    摘自 client.js:1416（focus_css_default）
+ * ========================================================================== */
+:root{--dsw-focus-ring-width:2px}:focus-visible{outline-color:var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-width:var(--dsw-focus-ring-width)}html[data-input-modality=pointer] body :focus-visible:not(:read-write){--dsw-focus-ring-color:transparent;outline-color:#0000}
+
+/* ==========================================================================
+ * 10. 统一基础排版
+ *     来源：dsh-web-frontend/dist/assets/index-BNyAYEM7.css 的 body 规则
+ *     （font-family: var(--dsw-font-family, …); -webkit-font-smoothing: antialiased;
+ *       -moz-osx-font-smoothing: grayscale; color/background 取 alias token）
+ *     字号/行高取 DSH 最常用的正文档 --dsw-font-s-14（14/22）。
+ * ========================================================================== */
+html{
+  background: var(--dsw-alias-bg-base);
+}
+body{
+  margin: 0;
+  font-family: var(--dsw-font-family);
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-autospace: normal;
+}
+code,
+kbd,
+pre,
+samp{
+  font-family: var(--ds-font-family-code);
+}
+
+/* ==========================================================================
+ * 11. 可选的工程化补丁（原型便利，删掉不影响 token 保真）
+ *     DSH 本体由 #app 铺满视口，不依赖这条；但独立 HTML 原型把
+ *     data-ds-dark-theme 挂在 <body> 上时，若 body 没铺满视口，html 仍按
+ *     浅色解析会露出白边。这里在检测到 body 深色属性时把 html 底色切成
+ *     深色 bg-base 的原始值（--dsw-static-neutral-bluish-950），不做调色。
+ * ========================================================================== */
+html:has(> body[data-ds-dark-theme]){
+  background: var(--dsw-static-neutral-bluish-950);
+}
+
+
+/* ===== 以下是 demo 自身的样例布局，不属于 token 表 ===== */
+*{box-sizing:border-box}
+body{padding:0}
+.demo{max-width:1000px;margin:0 auto;padding:24px}
+.demo-head{display:flex;align-items:baseline;gap:12px;margin:0 0 4px}
+.demo-head h1{font-size:18px;font-weight:600;line-height:28px;margin:0;color:var(--dsw-alias-label-primary)}
+.demo-head span{font-size:12px;color:var(--dsw-alias-label-tertiary)}
+.demo-note{font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary);margin:0 0 20px}
+.stages{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.stage{width:380px;min-width:0}
+.stage-label{font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary);margin:0 0 8px;font-family:var(--ds-font-family-code)}
+.col{background:var(--dsw-alias-bg-base);border:.5px solid var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-lg);overflow:hidden;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);font-size:13px;line-height:20px}
+.strip{display:flex;align-items:center;gap:4px;height:38px;padding:10px 6px 0 10px;border-bottom:.5px solid var(--dsw-alias-border-l3)}
+.tab{height:28px;padding:0 10px;display:inline-flex;align-items:center;border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-secondary);font-size:13px;white-space:nowrap;cursor:default}
+.tab.active{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-markdown-tag)}
+.strip-fill{flex:1}
+.icon-btn{width:28px;height:28px;padding:6px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:var(--dsw-radius-sm);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer}
+.icon-btn:hover{background:var(--dsw-alias-interactive-bg-hover)}
+.subhead{display:flex;align-items:center;gap:6px;height:38px;padding:0 6px 0 16px;border-bottom:.5px solid var(--dsw-alias-border-l3)}
+.subhead-title{font-size:13px;line-height:20px;font-weight:500}
+.count{font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary);font-family:var(--ds-font-family-code);padding:0 6px;height:16px;display:inline-flex;align-items:center;border-radius:8px;background:var(--dsw-alias-bg-module-platform)}
+.subhead-fill{flex:1}
+.searchrow{display:flex;padding:8px 12px;border-bottom:.5px solid var(--dsw-alias-border-l1)}
+.search{flex:1;display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:var(--dsw-radius-sm);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary)}
+.search-placeholder{font-size:12px;line-height:20px}
+.list{padding:6px 8px;display:flex;flex-direction:column;gap:2px}
+.row{display:flex;align-items:center;gap:8px;min-height:40px;padding:6px 8px;border-radius:var(--dsw-radius-md);color:inherit}
+.row:hover,.row.is-hover{background:var(--dsw-alias-interactive-bg-hover)}
+.row-text{display:flex;flex-direction:column;min-width:0;flex:1;gap:1px}
+.row-name{font-size:13px;line-height:20px;color:var(--dsw-alias-label-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-meta{font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary);font-family:var(--ds-font-family-code);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-more{color:var(--dsw-alias-label-tertiary);opacity:0;font-size:14px;line-height:1;letter-spacing:1px}
+.row:hover .row-more,.row.is-hover .row-more{opacity:1}
+.section{padding:12px 16px;border-top:.5px solid var(--dsw-alias-border-l1)}
+.h{font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary);margin:0 0 8px;font-family:var(--ds-font-family-code)}
+.body-text{margin:0;font-size:14px;line-height:22px;color:var(--dsw-alias-label-primary)}
+.secondary{margin:2px 0 0;font-size:13px;line-height:20px;color:var(--dsw-alias-label-secondary)}
+.caption{margin:2px 0 0;font-size:12px;line-height:18px;color:var(--dsw-alias-label-caption)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{height:28px;padding:0 12px;border-radius:var(--dsw-radius-sm);font-family:inherit;font-size:12px;line-height:18px;cursor:pointer;border:.5px solid transparent}
+.btn.primary{background:var(--dsw-alias-button-primary-fill);color:var(--dsw-alias-label-primary-foreground);font-weight:500}
+.btn.primary:hover{background:var(--dsw-alias-button-primary-hover)}
+.btn.ghost{background:transparent;color:var(--dsw-alias-label-secondary);border-color:var(--dsw-alias-border-l2)}
+.btn.ghost:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.icon-strip{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.fic{--dsh-file-type-violet:rgb(139,118,246);color:var(--dsh-file-type-icon-color,var(--dsh-file-type-default-color));flex:none}
+.fic-code{--dsh-file-type-default-color:var(--dsw-static-deepseek-500)}
+.fic-excel{--dsh-file-type-default-color:var(--dsw-static-green-500)}
+.fic-folder{--dsh-file-type-default-color:var(--dsw-static-amber-400)}
+.fic-html{--dsh-file-type-default-color:var(--dsw-static-deepseek-500)}
+.fic-image{--dsh-file-type-default-color:var(--dsh-file-type-violet)}
+.fic-markdown{--dsh-file-type-default-color:var(--dsw-static-deepseek-500)}
+.fic-other{--dsh-file-type-default-color:var(--dsw-static-neutral-bluish-300)}
+.fic-pdf{--dsh-file-type-default-color:var(--dsw-static-red-600)}
+.fic-ppt{--dsh-file-type-default-color:var(--dsw-static-amber-500)}
+.fic-video{--dsh-file-type-default-color:var(--dsh-file-type-violet)}
+.fic-word{--dsh-file-type-default-color:var(--dsw-static-deepseek-450)}
+.empty{display:flex;flex-direction:column;align-items:center;gap:4px;padding:28px 24px;text-align:center}
+.empty-title{font-size:13px;line-height:20px;font-weight:500;color:var(--dsw-alias-label-secondary);margin-top:6px}
+.empty-hint{font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary)}
+.tooltip{display:inline-block;padding:3px 7px;border-radius:var(--dsw-radius-sm);background:var(--dsw-alias-tooltip-bg);color:var(--dsw-static-neutral-bluish-00);font-size:13px;line-height:20px}
+.kbd{font-family:var(--ds-font-family-code);font-size:11px;padding:1px 5px;border-radius:4px;background:var(--dsw-alias-tooltip-key-bg);color:var(--dsw-static-neutral-bluish-00)}
+</style>
+</head>
+<body>
+<div class="demo">
+  <div class="demo-head"><h1>DSH token 校验</h1><span>浅色 / 深色并排 · 380px 右栏宽度</span></div>
+  <p class="demo-note">深色块使用 DSH 真实机制 <code>[data-ds-dark-theme]</code>（DSH 挂在 body 上，这里挂在容器上做并排）。所有颜色均来自 docs/tokens.css，无自创色值。</p>
+  <div class="stages">
+    
+<section class="stage">
+  <p class="stage-label">浅色 · light</p>
+  <div class="col " >
+    <div class="strip">
+      <span class="tab">文件</span>
+      <span class="tab active">产出物</span>
+      <span class="tab">Git 提交图</span>
+      <span class="strip-fill"></span>
+      <button class="icon-btn" aria-label="刷新">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.61-3.89M13.5 2.5V5H11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <div class="subhead">
+      <span class="subhead-title">产出物</span>
+      <span class="count">8</span>
+      <span class="subhead-fill"></span>
+      <button class="icon-btn" aria-label="排序">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 3v10M4 13l-2-2M4 13l2-2M12 13V3M12 3l-2 2M12 3l2 2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <div class="searchrow">
+      <div class="search">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="4.2" stroke="currentColor" stroke-width="1.2"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        <span class="search-placeholder">搜索产出物…</span>
+      </div>
+    </div>
+
+    <div class="list">
+      
+      <div class="row ">
+        <svg class="fic fic-word" width="16" height="16" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.22) translate(-14 -16)"><path d="M10.5118 20.5L8.24179 13.5H10.2818L12.1918 19.56H11.1618L13.1718 13.5H14.9918L16.8918 19.56H15.9018L17.8718 13.5H19.7618L17.4918 20.5H15.3718L13.7518 15.35H14.3218L12.6318 20.5H10.5118Z" fill="currentColor"/></g></svg>
+        <span class="row-text">
+          <span class="row-name">产品需求说明 v3.docx</span>
+          <span class="row-meta">DOCX · 1.2 MB · 今天 14:32</span>
+        </span>
+        <span class="row-more">···</span>
+      </div>
+      <div class="row is-hover">
+        <svg class="fic fic-excel" width="16" height="16" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)"><path d="M14 11.5H11.4C10.5599 11.5 10.1399 11.5 9.81901 11.6635C9.53677 11.8073 9.3073 12.0368 9.16349 12.319C9 12.6399 9 13.0599 9 13.9V16.5M14 11.5H16.6C17.4401 11.5 17.8601 11.5 18.181 11.6635C18.4632 11.8073 18.6927 12.0368 18.8365 12.319C19 12.6399 19 13.0599 19 13.9V16.5M14 11.5V21.5M14 21.5H16.6C17.4401 21.5 17.8601 21.5 18.181 21.3365C18.4632 21.1927 18.6927 20.9632 18.8365 20.681C19 20.3601 19 19.9401 19 19.1V16.5M14 21.5H11.4C10.5599 21.5 10.1399 21.5 9.81901 21.3365C9.53677 21.1927 9.3073 20.9632 9.16349 20.681C9 20.3601 9 19.9401 9 19.1V16.5M19 16.5H9" stroke="currentColor" stroke-width="1.2" fill="none"/></g></svg>
+        <span class="row-text">
+          <span class="row-name">2026-Q4 预算表.xlsx</span>
+          <span class="row-meta">XLSX · 468 KB · 今天 11:05</span>
+        </span>
+        <span class="row-more">···</span>
+      </div>
+      <div class="row ">
+        <svg class="fic fic-pdf" width="16" height="16" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.22) translate(-14 -16)"><path d="M6.80616 19.5V14.6H9.04616C9.49416 14.6 9.87916 14.6723 10.2012 14.817C10.5278 14.9617 10.7798 15.1717 10.9572 15.447C11.1345 15.7177 11.2232 16.0397 11.2232 16.413C11.2232 16.7817 11.1345 17.1013 10.9572 17.372C10.7798 17.6427 10.5278 17.8527 10.2012 18.002C9.87916 18.1467 9.49416 18.219 9.04616 18.219H7.57616L8.19216 17.617V19.5H6.80616ZM8.19216 17.764L7.57616 17.127H8.96216C9.2515 17.127 9.46616 17.064 9.60616 16.938C9.75083 16.812 9.82316 16.637 9.82316 16.413C9.82316 16.1843 9.75083 16.007 9.60616 15.881C9.46616 15.755 9.2515 15.692 8.96216 15.692H7.57616L8.19216 15.055V17.764ZM11.8989 19.5V14.6H14.2159C14.7573 14.6 15.2333 14.7003 15.6439 14.901C16.0546 15.1017 16.3743 15.384 16.6029 15.748C16.8363 16.112 16.9529 16.546 16.9529 17.05C16.9529 17.5493 16.8363 17.9833 16.6029 18.352C16.3743 18.716 16.0546 18.9983 15.6439 19.199C15.2333 19.3997 14.7573 19.5 14.2159 19.5H11.8989ZM13.2849 18.394H14.1599C14.4399 18.394 14.6826 18.3427 14.8879 18.24C15.0979 18.1327 15.2613 17.9787 15.3779 17.778C15.4946 17.5727 15.5529 17.33 15.5529 17.05C15.5529 16.7653 15.4946 16.5227 15.3779 16.322C15.2613 16.1213 15.0979 15.9697 14.8879 15.867C14.6826 15.7597 14.4399 15.706 14.1599 15.706H13.2849V18.394ZM17.6821 19.5V14.6H21.5251V15.671H19.0681V19.5H17.6821ZM18.9701 17.82V16.749H21.2311V17.82H18.9701Z" fill="currentColor"/></g></svg>
+        <span class="row-text">
+          <span class="row-name">竞品分析报告.pdf</span>
+          <span class="row-meta">PDF · 8.6 MB · 昨天</span>
+        </span>
+        <span class="row-more">···</span>
+      </div>
+      <div class="row ">
+        <svg class="fic fic-image" width="16" height="16" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.12) translate(-14 -16)"><path d="M10.4212 15.9204C10.5756 15.6558 10.9579 15.6558 11.1123 15.9204L13.6493 20.2696C13.8048 20.5362 13.6125 20.8711 13.3037 20.8711H8.22974C7.92102 20.8711 7.72868 20.5362 7.88423 20.2696L10.4212 15.9204Z" fill="currentColor"/><path d="M15.4981 13.186C15.6505 12.9117 16.0451 12.9117 16.1975 13.186L20.1368 20.2769C20.2849 20.5435 20.0922 20.8711 19.7872 20.8711H11.9084C11.6034 20.8711 11.4107 20.5435 11.5588 20.2769L15.4981 13.186Z" fill="currentColor"/><path d="M11.8603 11.3997C11.8603 12.286 11.1418 13.0045 10.2555 13.0045C9.36924 13.0045 8.65076 12.286 8.65076 11.3997C8.65076 10.5134 9.36924 9.79492 10.2555 9.79492C11.1418 9.79492 11.8603 10.5134 11.8603 11.3997Z" fill="currentColor"/></g></svg>
+        <span class="row-text">
+          <span class="row-name">首页视觉稿@2x.png</span>
+          <span class="row-meta">PNG · 3.4 MB · 昨天</span>
+        </span>
+        <span class="row-more">···</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="h">标题 / 正文 / 次要文字</p>
+      <p class="body-text">DSH 正文使用 14px / 22px，颜色取 label-primary。</p>
+      <p class="secondary">次要说明文字 13px，颜色 label-secondary。</p>
+      <p class="caption">Caption 12px，颜色 label-caption。</p>
+    </div>
+
+    <div class="section">
+      <p class="h">按钮</p>
+      <div class="btns">
+        <button class="btn primary">用默认应用打开</button>
+        <button class="btn ghost">在侧边栏预览</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="h">文件类型图标（DSH FileTypeIcon 原路径）</p>
+      <div class="icon-strip"><svg class="fic fic-word" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.22) translate(-14 -16)"><path d="M10.5118 20.5L8.24179 13.5H10.2818L12.1918 19.56H11.1618L13.1718 13.5H14.9918L16.8918 19.56H15.9018L17.8718 13.5H19.7618L17.4918 20.5H15.3718L13.7518 15.35H14.3218L12.6318 20.5H10.5118Z" fill="currentColor"/></g></svg><svg class="fic fic-excel" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)"><path d="M14 11.5H11.4C10.5599 11.5 10.1399 11.5 9.81901 11.6635C9.53677 11.8073 9.3073 12.0368 9.16349 12.319C9 12.6399 9 13.0599 9 13.9V16.5M14 11.5H16.6C17.4401 11.5 17.8601 11.5 18.181 11.6635C18.4632 11.8073 18.6927 12.0368 18.8365 12.319C19 12.6399 19 13.0599 19 13.9V16.5M14 11.5V21.5M14 21.5H16.6C17.4401 21.5 17.8601 21.5 18.181 21.3365C18.4632 21.1927 18.6927 20.9632 18.8365 20.681C19 20.3601 19 19.9401 19 19.1V16.5M14 21.5H11.4C10.5599 21.5 10.1399 21.5 9.81901 21.3365C9.53677 21.1927 9.3073 20.9632 9.16349 20.681C9 20.3601 9 19.9401 9 19.1V16.5M19 16.5H9" stroke="currentColor" stroke-width="1.2" fill="none"/></g></svg><svg class="fic fic-pdf" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.22) translate(-14 -16)"><path d="M6.80616 19.5V14.6H9.04616C9.49416 14.6 9.87916 14.6723 10.2012 14.817C10.5278 14.9617 10.7798 15.1717 10.9572 15.447C11.1345 15.7177 11.2232 16.0397 11.2232 16.413C11.2232 16.7817 11.1345 17.1013 10.9572 17.372C10.7798 17.6427 10.5278 17.8527 10.2012 18.002C9.87916 18.1467 9.49416 18.219 9.04616 18.219H7.57616L8.19216 17.617V19.5H6.80616ZM8.19216 17.764L7.57616 17.127H8.96216C9.2515 17.127 9.46616 17.064 9.60616 16.938C9.75083 16.812 9.82316 16.637 9.82316 16.413C9.82316 16.1843 9.75083 16.007 9.60616 15.881C9.46616 15.755 9.2515 15.692 8.96216 15.692H7.57616L8.19216 15.055V17.764ZM11.8989 19.5V14.6H14.2159C14.7573 14.6 15.2333 14.7003 15.6439 14.901C16.0546 15.1017 16.3743 15.384 16.6029 15.748C16.8363 16.112 16.9529 16.546 16.9529 17.05C16.9529 17.5493 16.8363 17.9833 16.6029 18.352C16.3743 18.716 16.0546 18.9983 15.6439 19.199C15.2333 19.3997 14.7573 19.5 14.2159 19.5H11.8989ZM13.2849 18.394H14.1599C14.4399 18.394 14.6826 18.3427 14.8879 18.24C15.0979 18.1327 15.2613 17.9787 15.3779 17.778C15.4946 17.5727 15.5529 17.33 15.5529 17.05C15.5529 16.7653 15.4946 16.5227 15.3779 16.322C15.2613 16.1213 15.0979 15.9697 14.8879 15.867C14.6826 15.7597 14.4399 15.706 14.1599 15.706H13.2849V18.394ZM17.6821 19.5V14.6H21.5251V15.671H19.0681V19.5H17.6821ZM18.9701 17.82V16.749H21.2311V17.82H18.9701Z" fill="currentColor"/></g></svg><svg class="fic fic-ppt" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.22) translate(-14 -16)"><path d="M11.0132 20.5V13.5H14.2132C14.8532 13.5 15.4032 13.6033 15.8632 13.81C16.3299 14.0167 16.6899 14.3167 16.9432 14.71C17.1966 15.0967 17.3232 15.5567 17.3232 16.09C17.3232 16.6167 17.1966 17.0733 16.9432 17.46C16.6899 17.8467 16.3299 18.1467 15.8632 18.36C15.4032 18.5667 14.8532 18.67 14.2132 18.67H12.1132L12.9932 17.81V20.5H11.0132ZM12.9932 18.02L12.1132 17.11H14.0932C14.5066 17.11 14.8132 17.02 15.0132 16.84C15.2199 16.66 15.3232 16.41 15.3232 16.09C15.3232 15.7633 15.2199 15.51 15.0132 15.33C14.8132 15.15 14.5066 15.06 14.0932 15.06H12.1132L12.9932 14.15V18.02Z" fill="currentColor"/></g></svg><svg class="fic fic-image" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.12) translate(-14 -16)"><path d="M10.4212 15.9204C10.5756 15.6558 10.9579 15.6558 11.1123 15.9204L13.6493 20.2696C13.8048 20.5362 13.6125 20.8711 13.3037 20.8711H8.22974C7.92102 20.8711 7.72868 20.5362 7.88423 20.2696L10.4212 15.9204Z" fill="currentColor"/><path d="M15.4981 13.186C15.6505 12.9117 16.0451 12.9117 16.1975 13.186L20.1368 20.2769C20.2849 20.5435 20.0922 20.8711 19.7872 20.8711H11.9084C11.6034 20.8711 11.4107 20.5435 11.5588 20.2769L15.4981 13.186Z" fill="currentColor"/><path d="M11.8603 11.3997C11.8603 12.286 11.1418 13.0045 10.2555 13.0045C9.36924 13.0045 8.65076 12.286 8.65076 11.3997C8.65076 10.5134 9.36924 9.79492 10.2555 9.79492C11.1418 9.79492 11.8603 10.5134 11.8603 11.3997Z" fill="currentColor"/></g></svg><svg class="fic fic-video" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.12) translate(-14 -16)"><path d="M17.5 14.634C18.1667 15.0189 18.1667 15.9811 17.5 16.366L11.5 19.8301C10.8333 20.215 10 19.7339 10 18.9641L10 12.0359C10 11.2661 10.8333 10.785 11.5 11.1699L17.5 14.634Z" fill="currentColor"/></g></svg><svg class="fic fic-code" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform=""><path d="M10.0053 13.126L7.0236 16.3788C6.96052 16.4476 6.96052 16.5532 7.0236 16.622L10.0053 19.8748" stroke="currentColor" stroke-width="1.35"/><path d="M17.9941 13.126L20.9759 16.3788C21.039 16.4476 21.039 16.5532 20.9759 16.622L17.9941 19.8748" stroke="currentColor" stroke-width="1.35"/><path d="M15.2652 12.957L12.7344 20.0433" stroke="currentColor" stroke-width="1.35"/></g></svg><svg class="fic fic-markdown" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.22) translate(-14 -16)"><path d="M8.7588 19.5V14.6H9.8998L11.9298 17.932H11.3278L13.3018 14.6H14.4428L14.4568 19.5H13.1828L13.1688 16.539H13.3858L11.9088 19.017H11.2928L9.7738 16.539H10.0398V19.5H8.7588ZM15.4375 19.5V14.6H17.7545C18.2958 14.6 18.7718 14.7003 19.1825 14.901C19.5932 15.1017 19.9128 15.384 20.1415 15.748C20.3748 16.112 20.4915 16.546 20.4915 17.05C20.4915 17.5493 20.3748 17.9833 20.1415 18.352C19.9128 18.716 19.5932 18.9983 19.1825 19.199C18.7718 19.3997 18.2958 19.5 17.7545 19.5H15.4375ZM16.8235 18.394H17.6985C17.9785 18.394 18.2212 18.3427 18.4265 18.24C18.6365 18.1327 18.7998 17.9787 18.9165 17.778C19.0332 17.5727 19.0915 17.33 19.0915 17.05C19.0915 16.7653 19.0332 16.5227 18.9165 16.322C18.7998 16.1213 18.6365 15.9697 18.4265 15.867C18.2212 15.7597 17.9785 15.706 17.6985 15.706H16.8235V18.394Z" fill="currentColor"/></g></svg><svg class="fic fic-html" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.12) translate(-14 -16)"><path fill-rule="evenodd" clip-rule="evenodd" d="M13.9994 9.68298C17.212 9.68298 19.8167 12.2872 19.8168 15.4997C19.8168 18.7123 17.2121 21.3171 13.9994 21.3171C10.7869 21.3169 8.18274 18.7122 8.18274 15.4997C8.1829 12.2873 10.787 9.68315 13.9994 9.68298ZM9.26213 16.0247C9.47025 17.9241 10.7936 19.4876 12.5639 20.0463C12.42 19.7977 12.2952 19.5152 12.1879 19.2116C11.885 18.3541 11.693 17.2434 11.6424 16.0247H9.26213ZM16.3565 16.0247C16.3059 17.2434 16.1145 18.3542 15.8116 19.2116C15.7044 19.5151 15.5788 19.7971 15.435 20.0456C17.2054 19.487 18.5293 17.9242 18.7374 16.0247H16.3565ZM12.6938 16.0247C12.7439 17.1459 12.9212 18.1334 13.1784 18.8616C13.332 19.2962 13.503 19.61 13.6686 19.805C13.834 19.9996 13.9473 20.0256 13.9994 20.0258C14.0514 20.0258 14.1651 20.0002 14.331 19.805C14.4966 19.61 14.6676 19.2962 14.8211 18.8616C15.0784 18.1334 15.2557 17.1459 15.3058 16.0247H12.6938ZM13.9994 10.733C13.9473 10.7331 13.834 10.7598 13.6686 10.9545C13.503 11.1494 13.3319 11.4633 13.1784 11.8978C12.903 12.6777 12.7188 13.7545 12.6849 14.9747H15.3147C15.2808 13.7545 15.0966 12.6777 14.8211 11.8978C14.6676 11.4633 14.4965 11.1494 14.331 10.9545C14.1651 10.7593 14.0514 10.733 13.9994 10.733ZM15.5888 11.0051C15.6701 11.1756 15.7444 11.3576 15.8116 11.5478C16.1343 12.4613 16.3308 13.6619 16.3647 14.9747H18.7374C18.5352 13.1307 17.2817 11.6036 15.5888 11.0051ZM12.4101 11.0051C10.7174 11.6037 9.46428 13.1308 9.26213 14.9747H11.6349C11.6688 13.6619 11.8652 12.4613 12.1879 11.5478C12.2551 11.3577 12.3288 11.1756 12.4101 11.0051Z" fill="currentColor"/></g></svg><svg class="fic fic-other" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-400)"/></svg></div>
+    </div>
+
+    <div class="section">
+      <p class="h">空状态</p>
+      <div class="empty">
+        <svg width="24" height="24" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="var(--dsw-alias-label-caption)"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-alias-bg-base)"/></svg>
+        <span class="empty-title">还没有产出物</span>
+        <span class="empty-hint">模型用 present 交付的文件会出现在这里</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="h">Tooltip</p>
+      <span class="tooltip">已复制路径<br><kbd class="kbd">⌘</kbd> + 点击在默认应用打开</span>
+    </div>
+  </div>
+</section>
+    
+<section class="stage">
+  <p class="stage-label">深色 · dark</p>
+  <div class="col is-dark" data-ds-dark-theme>
+    <div class="strip">
+      <span class="tab">文件</span>
+      <span class="tab active">产出物</span>
+      <span class="tab">Git 提交图</span>
+      <span class="strip-fill"></span>
+      <button class="icon-btn" aria-label="刷新">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.61-3.89M13.5 2.5V5H11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <div class="subhead">
+      <span class="subhead-title">产出物</span>
+      <span class="count">8</span>
+      <span class="subhead-fill"></span>
+      <button class="icon-btn" aria-label="排序">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 3v10M4 13l-2-2M4 13l2-2M12 13V3M12 3l-2 2M12 3l2 2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <div class="searchrow">
+      <div class="search">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="4.2" stroke="currentColor" stroke-width="1.2"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        <span class="search-placeholder">搜索产出物…</span>
+      </div>
+    </div>
+
+    <div class="list">
+      
+      <div class="row ">
+        <svg class="fic fic-word" width="16" height="16" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.22) translate(-14 -16)"><path d="M10.5118 20.5L8.24179 13.5H10.2818L12.1918 19.56H11.1618L13.1718 13.5H14.9918L16.8918 19.56H15.9018L17.8718 13.5H19.7618L17.4918 20.5H15.3718L13.7518 15.35H14.3218L12.6318 20.5H10.5118Z" fill="currentColor"/></g></svg>
+        <span class="row-text">
+          <span class="row-name">产品需求说明 v3.docx</span>
+          <span class="row-meta">DOCX · 1.2 MB · 今天 14:32</span>
+        </span>
+        <span class="row-more">···</span>
+      </div>
+      <div class="row is-hover">
+        <svg class="fic fic-excel" width="16" height="16" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)"><path d="M14 11.5H11.4C10.5599 11.5 10.1399 11.5 9.81901 11.6635C9.53677 11.8073 9.3073 12.0368 9.16349 12.319C9 12.6399 9 13.0599 9 13.9V16.5M14 11.5H16.6C17.4401 11.5 17.8601 11.5 18.181 11.6635C18.4632 11.8073 18.6927 12.0368 18.8365 12.319C19 12.6399 19 13.0599 19 13.9V16.5M14 11.5V21.5M14 21.5H16.6C17.4401 21.5 17.8601 21.5 18.181 21.3365C18.4632 21.1927 18.6927 20.9632 18.8365 20.681C19 20.3601 19 19.9401 19 19.1V16.5M14 21.5H11.4C10.5599 21.5 10.1399 21.5 9.81901 21.3365C9.53677 21.1927 9.3073 20.9632 9.16349 20.681C9 20.3601 9 19.9401 9 19.1V16.5M19 16.5H9" stroke="currentColor" stroke-width="1.2" fill="none"/></g></svg>
+        <span class="row-text">
+          <span class="row-name">2026-Q4 预算表.xlsx</span>
+          <span class="row-meta">XLSX · 468 KB · 今天 11:05</span>
+        </span>
+        <span class="row-more">···</span>
+      </div>
+      <div class="row ">
+        <svg class="fic fic-pdf" width="16" height="16" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.22) translate(-14 -16)"><path d="M6.80616 19.5V14.6H9.04616C9.49416 14.6 9.87916 14.6723 10.2012 14.817C10.5278 14.9617 10.7798 15.1717 10.9572 15.447C11.1345 15.7177 11.2232 16.0397 11.2232 16.413C11.2232 16.7817 11.1345 17.1013 10.9572 17.372C10.7798 17.6427 10.5278 17.8527 10.2012 18.002C9.87916 18.1467 9.49416 18.219 9.04616 18.219H7.57616L8.19216 17.617V19.5H6.80616ZM8.19216 17.764L7.57616 17.127H8.96216C9.2515 17.127 9.46616 17.064 9.60616 16.938C9.75083 16.812 9.82316 16.637 9.82316 16.413C9.82316 16.1843 9.75083 16.007 9.60616 15.881C9.46616 15.755 9.2515 15.692 8.96216 15.692H7.57616L8.19216 15.055V17.764ZM11.8989 19.5V14.6H14.2159C14.7573 14.6 15.2333 14.7003 15.6439 14.901C16.0546 15.1017 16.3743 15.384 16.6029 15.748C16.8363 16.112 16.9529 16.546 16.9529 17.05C16.9529 17.5493 16.8363 17.9833 16.6029 18.352C16.3743 18.716 16.0546 18.9983 15.6439 19.199C15.2333 19.3997 14.7573 19.5 14.2159 19.5H11.8989ZM13.2849 18.394H14.1599C14.4399 18.394 14.6826 18.3427 14.8879 18.24C15.0979 18.1327 15.2613 17.9787 15.3779 17.778C15.4946 17.5727 15.5529 17.33 15.5529 17.05C15.5529 16.7653 15.4946 16.5227 15.3779 16.322C15.2613 16.1213 15.0979 15.9697 14.8879 15.867C14.6826 15.7597 14.4399 15.706 14.1599 15.706H13.2849V18.394ZM17.6821 19.5V14.6H21.5251V15.671H19.0681V19.5H17.6821ZM18.9701 17.82V16.749H21.2311V17.82H18.9701Z" fill="currentColor"/></g></svg>
+        <span class="row-text">
+          <span class="row-name">竞品分析报告.pdf</span>
+          <span class="row-meta">PDF · 8.6 MB · 昨天</span>
+        </span>
+        <span class="row-more">···</span>
+      </div>
+      <div class="row ">
+        <svg class="fic fic-image" width="16" height="16" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.12) translate(-14 -16)"><path d="M10.4212 15.9204C10.5756 15.6558 10.9579 15.6558 11.1123 15.9204L13.6493 20.2696C13.8048 20.5362 13.6125 20.8711 13.3037 20.8711H8.22974C7.92102 20.8711 7.72868 20.5362 7.88423 20.2696L10.4212 15.9204Z" fill="currentColor"/><path d="M15.4981 13.186C15.6505 12.9117 16.0451 12.9117 16.1975 13.186L20.1368 20.2769C20.2849 20.5435 20.0922 20.8711 19.7872 20.8711H11.9084C11.6034 20.8711 11.4107 20.5435 11.5588 20.2769L15.4981 13.186Z" fill="currentColor"/><path d="M11.8603 11.3997C11.8603 12.286 11.1418 13.0045 10.2555 13.0045C9.36924 13.0045 8.65076 12.286 8.65076 11.3997C8.65076 10.5134 9.36924 9.79492 10.2555 9.79492C11.1418 9.79492 11.8603 10.5134 11.8603 11.3997Z" fill="currentColor"/></g></svg>
+        <span class="row-text">
+          <span class="row-name">首页视觉稿@2x.png</span>
+          <span class="row-meta">PNG · 3.4 MB · 昨天</span>
+        </span>
+        <span class="row-more">···</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="h">标题 / 正文 / 次要文字</p>
+      <p class="body-text">DSH 正文使用 14px / 22px，颜色取 label-primary。</p>
+      <p class="secondary">次要说明文字 13px，颜色 label-secondary。</p>
+      <p class="caption">Caption 12px，颜色 label-caption。</p>
+    </div>
+
+    <div class="section">
+      <p class="h">按钮</p>
+      <div class="btns">
+        <button class="btn primary">用默认应用打开</button>
+        <button class="btn ghost">在侧边栏预览</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="h">文件类型图标（DSH FileTypeIcon 原路径）</p>
+      <div class="icon-strip"><svg class="fic fic-word" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.22) translate(-14 -16)"><path d="M10.5118 20.5L8.24179 13.5H10.2818L12.1918 19.56H11.1618L13.1718 13.5H14.9918L16.8918 19.56H15.9018L17.8718 13.5H19.7618L17.4918 20.5H15.3718L13.7518 15.35H14.3218L12.6318 20.5H10.5118Z" fill="currentColor"/></g></svg><svg class="fic fic-excel" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)"><path d="M14 11.5H11.4C10.5599 11.5 10.1399 11.5 9.81901 11.6635C9.53677 11.8073 9.3073 12.0368 9.16349 12.319C9 12.6399 9 13.0599 9 13.9V16.5M14 11.5H16.6C17.4401 11.5 17.8601 11.5 18.181 11.6635C18.4632 11.8073 18.6927 12.0368 18.8365 12.319C19 12.6399 19 13.0599 19 13.9V16.5M14 11.5V21.5M14 21.5H16.6C17.4401 21.5 17.8601 21.5 18.181 21.3365C18.4632 21.1927 18.6927 20.9632 18.8365 20.681C19 20.3601 19 19.9401 19 19.1V16.5M14 21.5H11.4C10.5599 21.5 10.1399 21.5 9.81901 21.3365C9.53677 21.1927 9.3073 20.9632 9.16349 20.681C9 20.3601 9 19.9401 9 19.1V16.5M19 16.5H9" stroke="currentColor" stroke-width="1.2" fill="none"/></g></svg><svg class="fic fic-pdf" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.22) translate(-14 -16)"><path d="M6.80616 19.5V14.6H9.04616C9.49416 14.6 9.87916 14.6723 10.2012 14.817C10.5278 14.9617 10.7798 15.1717 10.9572 15.447C11.1345 15.7177 11.2232 16.0397 11.2232 16.413C11.2232 16.7817 11.1345 17.1013 10.9572 17.372C10.7798 17.6427 10.5278 17.8527 10.2012 18.002C9.87916 18.1467 9.49416 18.219 9.04616 18.219H7.57616L8.19216 17.617V19.5H6.80616ZM8.19216 17.764L7.57616 17.127H8.96216C9.2515 17.127 9.46616 17.064 9.60616 16.938C9.75083 16.812 9.82316 16.637 9.82316 16.413C9.82316 16.1843 9.75083 16.007 9.60616 15.881C9.46616 15.755 9.2515 15.692 8.96216 15.692H7.57616L8.19216 15.055V17.764ZM11.8989 19.5V14.6H14.2159C14.7573 14.6 15.2333 14.7003 15.6439 14.901C16.0546 15.1017 16.3743 15.384 16.6029 15.748C16.8363 16.112 16.9529 16.546 16.9529 17.05C16.9529 17.5493 16.8363 17.9833 16.6029 18.352C16.3743 18.716 16.0546 18.9983 15.6439 19.199C15.2333 19.3997 14.7573 19.5 14.2159 19.5H11.8989ZM13.2849 18.394H14.1599C14.4399 18.394 14.6826 18.3427 14.8879 18.24C15.0979 18.1327 15.2613 17.9787 15.3779 17.778C15.4946 17.5727 15.5529 17.33 15.5529 17.05C15.5529 16.7653 15.4946 16.5227 15.3779 16.322C15.2613 16.1213 15.0979 15.9697 14.8879 15.867C14.6826 15.7597 14.4399 15.706 14.1599 15.706H13.2849V18.394ZM17.6821 19.5V14.6H21.5251V15.671H19.0681V19.5H17.6821ZM18.9701 17.82V16.749H21.2311V17.82H18.9701Z" fill="currentColor"/></g></svg><svg class="fic fic-ppt" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.22) translate(-14 -16)"><path d="M11.0132 20.5V13.5H14.2132C14.8532 13.5 15.4032 13.6033 15.8632 13.81C16.3299 14.0167 16.6899 14.3167 16.9432 14.71C17.1966 15.0967 17.3232 15.5567 17.3232 16.09C17.3232 16.6167 17.1966 17.0733 16.9432 17.46C16.6899 17.8467 16.3299 18.1467 15.8632 18.36C15.4032 18.5667 14.8532 18.67 14.2132 18.67H12.1132L12.9932 17.81V20.5H11.0132ZM12.9932 18.02L12.1132 17.11H14.0932C14.5066 17.11 14.8132 17.02 15.0132 16.84C15.2199 16.66 15.3232 16.41 15.3232 16.09C15.3232 15.7633 15.2199 15.51 15.0132 15.33C14.8132 15.15 14.5066 15.06 14.0932 15.06H12.1132L12.9932 14.15V18.02Z" fill="currentColor"/></g></svg><svg class="fic fic-image" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.12) translate(-14 -16)"><path d="M10.4212 15.9204C10.5756 15.6558 10.9579 15.6558 11.1123 15.9204L13.6493 20.2696C13.8048 20.5362 13.6125 20.8711 13.3037 20.8711H8.22974C7.92102 20.8711 7.72868 20.5362 7.88423 20.2696L10.4212 15.9204Z" fill="currentColor"/><path d="M15.4981 13.186C15.6505 12.9117 16.0451 12.9117 16.1975 13.186L20.1368 20.2769C20.2849 20.5435 20.0922 20.8711 19.7872 20.8711H11.9084C11.6034 20.8711 11.4107 20.5435 11.5588 20.2769L15.4981 13.186Z" fill="currentColor"/><path d="M11.8603 11.3997C11.8603 12.286 11.1418 13.0045 10.2555 13.0045C9.36924 13.0045 8.65076 12.286 8.65076 11.3997C8.65076 10.5134 9.36924 9.79492 10.2555 9.79492C11.1418 9.79492 11.8603 10.5134 11.8603 11.3997Z" fill="currentColor"/></g></svg><svg class="fic fic-video" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.12) translate(-14 -16)"><path d="M17.5 14.634C18.1667 15.0189 18.1667 15.9811 17.5 16.366L11.5 19.8301C10.8333 20.215 10 19.7339 10 18.9641L10 12.0359C10 11.2661 10.8333 10.785 11.5 11.1699L17.5 14.634Z" fill="currentColor"/></g></svg><svg class="fic fic-code" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform=""><path d="M10.0053 13.126L7.0236 16.3788C6.96052 16.4476 6.96052 16.5532 7.0236 16.622L10.0053 19.8748" stroke="currentColor" stroke-width="1.35"/><path d="M17.9941 13.126L20.9759 16.3788C21.039 16.4476 21.039 16.5532 20.9759 16.622L17.9941 19.8748" stroke="currentColor" stroke-width="1.35"/><path d="M15.2652 12.957L12.7344 20.0433" stroke="currentColor" stroke-width="1.35"/></g></svg><svg class="fic fic-markdown" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.22) translate(-14 -16)"><path d="M8.7588 19.5V14.6H9.8998L11.9298 17.932H11.3278L13.3018 14.6H14.4428L14.4568 19.5H13.1828L13.1688 16.539H13.3858L11.9088 19.017H11.2928L9.7738 16.539H10.0398V19.5H8.7588ZM15.4375 19.5V14.6H17.7545C18.2958 14.6 18.7718 14.7003 19.1825 14.901C19.5932 15.1017 19.9128 15.384 20.1415 15.748C20.3748 16.112 20.4915 16.546 20.4915 17.05C20.4915 17.5493 20.3748 17.9833 20.1415 18.352C19.9128 18.716 19.5932 18.9983 19.1825 19.199C18.7718 19.3997 18.2958 19.5 17.7545 19.5H15.4375ZM16.8235 18.394H17.6985C17.9785 18.394 18.2212 18.3427 18.4265 18.24C18.6365 18.1327 18.7998 17.9787 18.9165 17.778C19.0332 17.5727 19.0915 17.33 19.0915 17.05C19.0915 16.7653 19.0332 16.5227 18.9165 16.322C18.7998 16.1213 18.6365 15.9697 18.4265 15.867C18.2212 15.7597 17.9785 15.706 17.6985 15.706H16.8235V18.394Z" fill="currentColor"/></g></svg><svg class="fic fic-html" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-00)" fill-opacity=".7"/><g color="var(--dsw-static-neutral-00)" transform="translate(14 16) scale(1.12) translate(-14 -16)"><path fill-rule="evenodd" clip-rule="evenodd" d="M13.9994 9.68298C17.212 9.68298 19.8167 12.2872 19.8168 15.4997C19.8168 18.7123 17.2121 21.3171 13.9994 21.3171C10.7869 21.3169 8.18274 18.7122 8.18274 15.4997C8.1829 12.2873 10.787 9.68315 13.9994 9.68298ZM9.26213 16.0247C9.47025 17.9241 10.7936 19.4876 12.5639 20.0463C12.42 19.7977 12.2952 19.5152 12.1879 19.2116C11.885 18.3541 11.693 17.2434 11.6424 16.0247H9.26213ZM16.3565 16.0247C16.3059 17.2434 16.1145 18.3542 15.8116 19.2116C15.7044 19.5151 15.5788 19.7971 15.435 20.0456C17.2054 19.487 18.5293 17.9242 18.7374 16.0247H16.3565ZM12.6938 16.0247C12.7439 17.1459 12.9212 18.1334 13.1784 18.8616C13.332 19.2962 13.503 19.61 13.6686 19.805C13.834 19.9996 13.9473 20.0256 13.9994 20.0258C14.0514 20.0258 14.1651 20.0002 14.331 19.805C14.4966 19.61 14.6676 19.2962 14.8211 18.8616C15.0784 18.1334 15.2557 17.1459 15.3058 16.0247H12.6938ZM13.9994 10.733C13.9473 10.7331 13.834 10.7598 13.6686 10.9545C13.503 11.1494 13.3319 11.4633 13.1784 11.8978C12.903 12.6777 12.7188 13.7545 12.6849 14.9747H15.3147C15.2808 13.7545 15.0966 12.6777 14.8211 11.8978C14.6676 11.4633 14.4965 11.1494 14.331 10.9545C14.1651 10.7593 14.0514 10.733 13.9994 10.733ZM15.5888 11.0051C15.6701 11.1756 15.7444 11.3576 15.8116 11.5478C16.1343 12.4613 16.3308 13.6619 16.3647 14.9747H18.7374C18.5352 13.1307 17.2817 11.6036 15.5888 11.0051ZM12.4101 11.0051C10.7174 11.6037 9.46428 13.1308 9.26213 14.9747H11.6349C11.6688 13.6619 11.8652 12.4613 12.1879 11.5478C12.2551 11.3577 12.3288 11.1756 12.4101 11.0051Z" fill="currentColor"/></g></svg><svg class="fic fic-other" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="currentColor"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-static-neutral-400)"/></svg></div>
+    </div>
+
+    <div class="section">
+      <p class="h">空状态</p>
+      <div class="empty">
+        <svg width="24" height="24" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M8.48924 28H19.5108C21.6479 28 22.7165 28 23.5594 27.6509C24.6833 27.1853 25.5762 26.2924 26.0417 25.1685C26.3909 24.3256 26.3909 23.257 26.3909 21.1199V8.79443C26.3909 8.32877 26.3909 8.09593 26.3471 7.87507C26.2887 7.58058 26.173 7.30042 26.0067 7.05048C25.882 6.86303 25.7177 6.69799 25.3893 6.36792L20.0611 1.01354C19.7304 0.681235 19.5651 0.515081 19.3769 0.38885C19.126 0.220541 18.8443 0.103463 18.5481 0.0443412C18.3259 0 18.0915 0 17.6226 0H8.48924C6.35209 0 5.28351 0 4.4406 0.349145C3.31672 0.814671 2.4238 1.70759 1.95828 2.83147C1.60913 3.67438 1.60913 4.74296 1.60913 6.88011V21.1199C1.60913 23.257 1.60913 24.3256 1.95828 25.1685C2.4238 26.2924 3.31672 27.1853 4.4406 27.6509C5.28351 28 6.35209 28 8.48924 28Z" fill="var(--dsw-alias-label-caption)"/><path d="M26.3909 7.37445L19.0525 0V3.77445C19.0525 4.89271 19.0525 5.45184 19.2352 5.89289C19.4788 6.48096 19.946 6.94818 20.5341 7.19176C20.9751 7.37445 21.5342 7.37445 22.6525 7.37445H26.3909Z" fill="var(--dsw-alias-bg-base)"/></svg>
+        <span class="empty-title">还没有产出物</span>
+        <span class="empty-hint">模型用 present 交付的文件会出现在这里</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="h">Tooltip</p>
+      <span class="tooltip">已复制路径<br><kbd class="kbd">⌘</kbd> + 点击在默认应用打开</span>
+    </div>
+  </div>
+</section>
+  </div>
+</div>
+</body>
+</html>

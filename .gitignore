@@ -1,0 +1,32 @@
+# 依赖与构建中间产物
+node_modules/
+dist/
+*.log
+.DS_Store
+
+.build/
+
+# ---------------------------------------------------------------------------
+# 本地材料，不随开源仓库发布
+#
+# 以下文件/目录只存在于本地工作区，含真实会话数据、本机绝对路径、内部项目名
+# 或内部过程记录，因此被 git 忽略（文件本身不会删除，只是不进版本库）。
+# ---------------------------------------------------------------------------
+progress.md
+docs/phase-1-report.html
+docs/research-api.md
+docs/review-phase1.md
+docs/verify-real-load.md
+prototype/index.html
+prototype/stats.json
+prototype/smoke.json
+scripts/build-prototype.mjs
+scripts/smoke-test.mjs
+scripts/verify-real-load.mjs
+
+# 截图只发布一张面板细节对比图（24）；其余是原型整页截图，含对内评审批注
+prototype/screenshots/*
+!prototype/screenshots/24-ui-v2-before-after.png
+
+# 原型构建模板（占位符待构建脚本填充，构建脚本本身不公开）
+prototype/template.html

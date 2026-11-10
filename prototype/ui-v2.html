@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>产出物面板 · 顶部拥挤优化（视觉稿）</title>
+<link rel="stylesheet" href="../docs/tokens.css">
+<style>
+/* ==========================================================================
+ * 页面外壳（设计板，不是产品 UI）
+ * ========================================================================== */
+*{box-sizing:border-box}
+html{background:#f6f7f8}
+body{
+  margin:0;font-family:var(--dsw-font-family);color:#1d2126;
+  -webkit-font-smoothing:antialiased;padding:0 0 80px;
+}
+
+/* 对比表 / 结论区 */
+.cmp{width:100%;border-collapse:collapse;font-size:12.5px;line-height:19px;background:#fff;
+  border-radius:12px;overflow:hidden;box-shadow:0 0 0 .5px #e3e5e8}
+.cmp th{background:#f2f4f6;color:#3c424a;text-align:left;font-weight:600;padding:9px 12px;white-space:nowrap}
+.cmp td{padding:10px 12px;border-top:.5px solid #e8eaed;color:#3c424a;vertical-align:top}
+.cmp td.num{font-family:var(--ds-font-family-code);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cmp tr.rec td{background:#f3faf6}
+.cmp .pill{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:999px;
+  background:#e7eefc;color:#1f5fd0}
+.cmp .pill.win{background:#13694a;color:#fff}
+.cmp .pill.bad{background:#fbe4e2;color:#b4231d}
+.cmp .pill.mid{background:#fdf3e2;color:#8a5800}
+.callout{
+  margin-top:16px;padding:16px 18px;border-radius:12px;background:#f1f6ff;
+  border-left:4px solid #2563eb;font-size:13px;line-height:21px;color:#26313f;max-width:1100px;
+}
+.callout b.t{color:#1f5fd0;display:block;margin-bottom:4px}
+.ask{
+  margin-top:16px;padding:16px 18px;border-radius:12px;background:#fff8ee;
+  border-left:4px solid #e8a33d;font-size:13px;line-height:21px;color:#3d3527;max-width:1100px;
+}
+.ask b.t{color:#8a5800;display:block;margin-bottom:6px}
+.ask ol{margin:0;padding-left:20px}
+.ask li{margin:5px 0}
+.topbar{
+  position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:24px;flex-wrap:wrap;
+  padding:14px 28px;background:rgba(252,252,253,.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid #e3e5e8;
+}
+.tb-title h1{margin:0;font-size:16px;font-weight:600;letter-spacing:.2px}
+.tb-title .sub{display:block;margin-top:3px;font-size:12px;color:#767c85}
+.tb-controls{margin-left:auto;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.ctl{display:flex;align-items:center;gap:8px;font-size:12px;color:#5d636c}
+.seg{display:inline-flex;padding:2px;border-radius:9px;background:#eceef1;gap:2px}
+.seg button{
+  font:inherit;font-size:12px;line-height:16px;padding:4px 10px;border:0;border-radius:7px;
+  background:transparent;color:#5d636c;cursor:pointer;white-space:nowrap;
+}
+.seg button.on{background:#fff;color:#1d2126;font-weight:500;box-shadow:0 1px 2px rgba(23,28,40,.12)}
+.board{max-width:1560px;margin:0 auto;padding:26px 28px 0}
+.block{margin-bottom:40px}
+.block-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.block-head h2{margin:0;font-size:18px;font-weight:600}
+.block-head p{margin:0;font-size:13px;color:#767c85;line-height:20px}
+.block-head .tag{
+  font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#e8f1ec;color:#1e6b45;
+}
+.row{display:flex;gap:32px;align-items:flex-start}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;align-items:start}
+.sample{min-width:0}
+.sample-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.sample-head .name{font-size:13.5px;font-weight:600}
+.sample-head .badge{
+  font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:999px;
+  background:#e7eefc;color:#1f5fd0;
+}
+.sample-head .badge.win{background:#13694a;color:#fff}
+.measure{
+  display:block;margin-top:8px;font-size:11px;color:#82878f;font-variant-numeric:tabular-nums;
+  font-family:var(--ds-font-family-code);
+}
+.notes{margin:0;padding:0;list-style:none;font-size:12.5px;line-height:19px;color:#4b5158;max-width:520px}
+.row3 .notes{margin-top:12px;max-width:none}
+.notes li{position:relative;padding-left:20px;margin-bottom:7px}
+.notes li::before{
+  content:attr(data-n);position:absolute;left:0;top:1px;width:15px;height:15px;border-radius:50%;
+  background:#eceef1;color:#5d636c;font-size:9.5px;font-weight:600;line-height:15px;text-align:center;
+}
+.notes li.bad::before{background:#fbe4e2;color:#b4231d}
+.notes li.good::before{background:#e2f0e8;color:#1e6b45}
+.notes b{font-weight:600;color:#1d2126}
+.notes code{
+  font-family:var(--ds-font-family-code);font-size:11px;background:#eceef1;border-radius:4px;padding:1px 4px;
+}
+.verdict{
+  margin-top:12px;padding:10px 12px;border-radius:9px;font-size:12.5px;line-height:19px;
+  background:#f0f3f6;color:#3c424a;
+}
+.verdict.win{background:#eef7f2;color:#175c3e}
+.verdict .sign{font-weight:600}
+
+/* 面板舞台：模拟右栏 tab body */
+.tabs{
+  display:flex;align-items:center;gap:2px;height:38px;padding:0 6px 0 10px;
+  background:var(--dsw-alias-bg-base);border-bottom:.5px solid var(--dsw-alias-border-l3);
+  border-radius:12px 12px 0 0;overflow:hidden;
+}
+.tabs .tab{
+  font-size:12.5px;line-height:18px;color:var(--dsw-alias-label-tertiary);padding:5px 9px;border-radius:7px;
+  white-space:nowrap;display:inline-flex;align-items:center;gap:5px;
+}
+.tabs .tab.active{background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-primary)}
+.tabs .tab i{
+  font-style:normal;font-family:var(--ds-font-family-code);font-size:10px;
+  color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums;
+}
+.tabs .x{
+  margin-left:auto;width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+  color:var(--dsw-alias-label-tertiary);font-size:15px;
+}
+.frame{
+  width:var(--panel-w,360px);border-radius:12px;overflow:hidden;position:relative;
+  box-shadow:0 8px 28px rgba(20,26,40,.13),0 0 0 .5px rgba(20,26,40,.10);
+  background:var(--dsw-alias-bg-base);
+  transition:width .18s ease;
+}
+.stage{position:relative;height:452px;overflow:hidden;background:var(--dsw-alias-bg-base)}
+.stage .dsout-root{height:100%}
+
+/* 控件区测量标注 */
+.gauge{
+  position:absolute;left:0;right:0;pointer-events:none;z-index:6;
+  border-top:1px dashed rgba(37,99,235,.45);border-bottom:1px dashed rgba(37,99,235,.45);
+}
+.gauge span{
+  position:absolute;right:4px;top:-8px;font-family:var(--ds-font-family-code);font-size:9px;
+  color:#2563eb;background:rgba(255,255,255,.92);border-radius:3px;padding:0 3px;
+}
+
+/* ==========================================================================
+ * 面板本体 CSS —— 与 src/client/styles.ts 的 PANEL_CSS 逐行一致
+ * ========================================================================== */
+.dsout-root{position:relative;display:flex;flex-direction:column;height:100%;min-height:0;min-width:0;
+  color:var(--dsw-alias-label-primary);font-size:13px;line-height:20px;background:transparent;container-type:inline-size}
+.dsout-root *{box-sizing:border-box}
+.dsout-root button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.dsout-root button:disabled{cursor:default}
+.dsout-root svg{display:block;flex:none}
+
+.dsout-fic{--dsout-fic-violet:rgb(139,118,246);--dsout-fic-color:var(--dsw-static-neutral-bluish-300);
+  color:var(--dsout-fic-color);flex:none}
+.dsout-fic-code{--dsout-fic-color:var(--dsw-static-deepseek-500)}
+.dsout-fic-excel{--dsout-fic-color:var(--dsw-static-green-500)}
+.dsout-fic-html{--dsout-fic-color:var(--dsw-static-deepseek-500)}
+.dsout-fic-image{--dsout-fic-color:var(--dsout-fic-violet)}
+.dsout-fic-markdown{--dsout-fic-color:var(--dsw-static-deepseek-500)}
+.dsout-fic-other{--dsout-fic-color:var(--dsw-static-neutral-bluish-300)}
+.dsout-fic-pdf{--dsout-fic-color:var(--dsw-static-red-600)}
+.dsout-fic-ppt{--dsout-fic-color:var(--dsw-static-amber-500)}
+.dsout-fic-video{--dsout-fic-color:var(--dsout-fic-violet)}
+.dsout-fic-word{--dsout-fic-color:var(--dsw-static-deepseek-450)}
+
+.dsout-head{flex:none;display:flex;align-items:center;gap:8px;height:38px;padding:0 6px 0 16px;
+  border-bottom:.5px solid var(--dsw-alias-border-l3)}
+.dsout-title{flex:none;font-size:13px;line-height:20px;font-weight:500;color:var(--dsw-alias-label-primary)}
+.dsout-count-pill{flex:none;padding:0 6px;border-radius:9px;background:var(--dsw-alias-bg-module-platform);
+  color:var(--dsw-alias-label-tertiary);font-family:var(--ds-font-family-code);font-size:11px;line-height:16px;
+  font-variant-numeric:tabular-nums}
+.dsout-run-dot{flex:none;width:6px;height:6px;border-radius:999px;background:var(--dsw-alias-state-business-primary)}
+.dsout-head-actions{flex:none;margin-left:auto;display:flex;align-items:center;gap:2px}
+.dsout-iconbtn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:none;
+  border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-secondary)}
+.dsout-iconbtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.dsout-iconbtn svg{width:15px;height:15px}
+
+.dsout-controls{flex:none;position:relative}
+.dsout-filters{flex:none;display:flex;align-items:center;gap:4px;padding:8px 12px 6px;
+  overflow-x:auto;scrollbar-width:none}
+.dsout-filters::-webkit-scrollbar{display:none}
+.dsout-chip{display:inline-flex;align-items:center;gap:4px;flex:none;height:24px;padding:0 8px;
+  border-radius:var(--dsw-radius-sm);border:.5px solid transparent;color:var(--dsw-alias-label-secondary);
+  font-size:11px;line-height:16px;white-space:nowrap}
+.dsout-chip:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.dsout-chip[aria-pressed="true"]{background:var(--dsw-alias-bg-module-platform);
+  border-color:var(--dsw-alias-border-l2);color:var(--dsw-alias-label-primary)}
+.dsout-chip-n{font-family:var(--ds-font-family-code);font-size:10px;line-height:14px;
+  color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}
+.dsout-chip[aria-pressed="true"] .dsout-chip-n{color:var(--dsw-alias-label-secondary)}
+
+.dsout-searchrow{flex:none;padding:0 12px 8px}
+.dsout-searchbox{position:relative;display:flex;align-items:center}
+.dsout-searchbox>svg{position:absolute;left:8px;width:13px;height:13px;color:var(--dsw-alias-label-tertiary);pointer-events:none}
+.dsout-search{width:100%;height:26px;padding:0 26px;border-radius:8px;border:1px solid var(--dsw-alias-border-l2);
+  background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-primary);font-family:inherit;
+  font-size:12px;line-height:20px;outline:none}
+.dsout-search::placeholder{color:var(--dsw-alias-label-tertiary)}
+.dsout-search:hover{border-color:var(--dsw-alias-border-l3)}
+
+.dsout-list{flex:1;min-height:0;overflow:auto;padding:2px 8px 8px}
+.dsout-row{position:relative;display:flex;align-items:flex-start;gap:10px;width:100%;padding:7px 8px;
+  border-radius:var(--dsw-radius-md);text-align:left;cursor:pointer;background:transparent;color:inherit;font:inherit}
+.dsout-row:hover{background:var(--dsw-alias-interactive-bg-hover)}
+.dsout-row-icon{flex:none;display:flex;margin-top:1px}
+.dsout-row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.dsout-row-name{font-size:13px;line-height:20px;font-weight:500;color:var(--dsw-alias-label-primary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsout-row-path{font-family:var(--ds-font-family-code);font-size:11px;line-height:16px;
+  color:var(--dsw-alias-label-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsout-row-desc{font-size:11px;line-height:16px;color:var(--dsw-alias-label-secondary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsout-row-meta{display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden;font-family:var(--ds-font-family-code);
+  font-size:10px;line-height:14px;color:var(--dsw-alias-label-caption);white-space:nowrap}
+.dsout-row-meta>*{flex:none}
+.dsout-sep{color:var(--dsw-alias-border-l4)}
+.dsout-meta-type{display:inline-flex;align-items:center;gap:5px;min-width:0;overflow:hidden}
+.dsout-meta-time{overflow:hidden;text-overflow:ellipsis}
+
+.dsout-badge{flex:none;display:inline-flex;align-items:center;height:15px;padding:0 4px;border-radius:4px;
+  background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary);font-size:9px;line-height:14px;
+  font-family:var(--dsw-font-family,inherit)}
+.dsout-badge-explicit{background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 12%,transparent);
+  color:var(--dsw-alias-state-business-primary)}
+.dsout-badge-source{background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 12%,transparent);
+  color:var(--dsw-alias-state-warn-label)}
+
+.dsout-row-actions{flex:none;display:flex;align-items:center;gap:2px;margin-top:2px;opacity:0}
+.dsout-row:hover .dsout-row-actions{opacity:1}
+.dsout-mini{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:none;
+  border-radius:999px;color:var(--dsw-alias-label-tertiary)}
+.dsout-mini svg{width:14px;height:14px}
+
+.dsout-state{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;padding:32px 24px;text-align:center}
+.dsout-state-icon{color:var(--dsw-alias-label-caption);opacity:.9}
+.dsout-state-title{font-size:13px;line-height:20px;font-weight:500;color:var(--dsw-alias-label-secondary)}
+.dsout-state-desc{font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary);max-width:250px}
+
+.dsout-foot{flex:none;display:flex;align-items:center;gap:6px;padding:8px 16px 10px;
+  border-top:.5px solid var(--dsw-alias-border-l1);font-size:10px;line-height:14px;color:var(--dsw-alias-label-caption)}
+.dsout-foot>svg{width:11px;height:11px;color:var(--dsw-alias-label-caption)}
+.dsout-foot-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dsout-foot-count{flex:none;font-family:var(--ds-font-family-code);font-variant-numeric:tabular-nums}
+
+@container (max-width:340px){
+  .dsout-meta-type{display:none}
+  .dsout-row-name{font-size:12px}
+}
+
+/* ==========================================================================
+ * 方向 A —— 分段式类型筛选 + 只保留有内容的类型
+ * ========================================================================== */
+[data-variant="a"] .dsout-filters{gap:2px;padding:3px;margin:10px 12px 0;border-radius:9px;
+  background:var(--dsw-alias-bg-module-platform);width:fit-content;max-width:calc(100% - 24px);overflow-x:auto}
+[data-variant="a"] .dsout-chip{height:24px;padding:0 9px;border-radius:7px;border:.5px solid transparent;
+  font-size:12px;gap:5px;color:var(--dsw-alias-label-secondary)}
+[data-variant="a"] .dsout-chip:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+[data-variant="a"] .dsout-chip[aria-pressed="true"]{background:var(--dsw-alias-bg-base);border-color:var(--dsw-alias-border-l2);
+  color:var(--dsw-alias-label-primary);font-weight:500;box-shadow:var(--dsw-shadow-lv1)}
+[data-variant="a"] .dsout-chip[aria-pressed="true"] .dsout-chip-n{color:var(--dsw-alias-label-secondary)}
+[data-variant="a"] .dsout-searchrow{padding:10px 12px 8px}
+
+/* ==========================================================================
+ * 方向 B —— 单行工具条：类型下拉 + 搜索
+ * ========================================================================== */
+.dsout-toolbar{display:flex;align-items:center;gap:8px;padding:10px 12px 8px}
+.dsout-select{display:inline-flex;align-items:center;gap:6px;flex:none;height:28px;padding:0 8px;
+  border-radius:8px;border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);
+  font-size:12px;white-space:nowrap}
+.dsout-select:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.dsout-select[aria-expanded="true"]{background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-primary)}
+.dsout-select .caret{width:12px;height:12px;color:var(--dsw-alias-label-secondary)}
+.dsout-menu{position:absolute;top:42px;left:12px;z-index:8;min-width:172px;padding:5px;
+  border-radius:10px;background:var(--dsw-alias-bg-base);border:.5px solid var(--dsw-alias-border-l2);
+  box-shadow:var(--dsw-shadow-lv2)}
+.dsout-menu-item{display:flex;align-items:center;gap:8px;width:100%;height:28px;padding:0 8px;border-radius:6px;
+  color:var(--dsw-alias-label-secondary);font-size:12px;text-align:left}
+.dsout-menu-item:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.dsout-menu-item[aria-checked="true"]{color:var(--dsw-alias-label-primary);font-weight:500}
+.dsout-menu-item .n{margin-left:auto;font-family:var(--ds-font-family-code);font-size:10px;
+  color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}
+.dsout-menu-item .tick{width:12px;height:12px;color:var(--dsw-alias-state-business-primary)}
+.dsout-menu-item.is-zero{opacity:.45}
+[data-variant="b"] .dsout-searchrow{flex:1;min-width:0;padding:0}
+
+/* ==========================================================================
+ * 方向 C —— 图标分段 + 搜索收进头部
+ * ========================================================================== */
+.dsout-filterbar{display:flex;align-items:center;gap:2px;padding:6px 8px 6px;margin:0 4px;
+  border-bottom:.5px solid var(--dsw-alias-border-l1)}
+.dsout-seg{position:relative;display:inline-flex;align-items:center;justify-content:center;width:34px;height:26px;
+  flex:none;border-radius:7px;color:var(--dsw-alias-label-secondary)}
+.dsout-seg:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.dsout-seg[aria-pressed="true"]{background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-primary)}
+.dsout-seg svg{width:15px;height:15px}
+.dsout-seg .n{position:absolute;top:-2px;right:-2px;min-width:12px;height:12px;padding:0 2px;border-radius:6px;
+  background:var(--dsw-alias-bg-base);border:.5px solid var(--dsw-alias-border-l2);
+  font-family:var(--ds-font-family-code);font-size:9px;line-height:11px;text-align:center;
+  color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}
+.dsout-seg[aria-pressed="true"] .n{color:var(--dsw-alias-label-secondary)}
+.dsout-seg-all svg{width:16px;height:16px}
+[data-variant="c"] .dsout-filters{padding:0}
+[data-variant="c"] .dsout-searchrow{padding:8px 12px 8px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-title">
+    <h1>产出物面板 · 顶部太挤</h1>
+    <span class="sub">现状 + 三个方向 · 颜色/间距全部取自 DSH token · 数据为真实交付形态</span>
+  </div>
+  <div class="tb-controls">
+    <div class="ctl"><span>预览主题</span>
+      <div class="seg" data-ctl="theme">
+        <button data-val="dark" class="on">深色</button><button data-val="light">浅色</button>
+      </div>
+    </div>
+    <div class="ctl"><span>面板宽度</span>
+      <div class="seg" data-ctl="width">
+        <button data-val="320">320</button><button data-val="360" class="on">360</button><button data-val="400">400</button>
+      </div>
+    </div>
+    <div class="ctl"><span>数据</span>
+      <div class="seg" data-ctl="data">
+        <button data-val="two" class="on">2 个文档</button><button data-val="mixed">6 个 · 四种类型</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="board">
+
+  <!-- ===================== 现状 ===================== -->
+  <section class="block">
+    <div class="block-head">
+      <h2>现状</h2>
+      <p>当前实现的样子：三行控件都在抢注意力，还没看到内容就先累了。</p>
+    </div>
+    <div class="row">
+      <div class="sample" style="max-width:var(--panel-w,360px)">
+        <div class="sample-head"><span class="name">当前实现</span></div>
+        <div class="frame" data-frame>
+          <div class="tabs"><span class="tab">文件</span><span class="tab active">产出物 <i>2</i></span><span class="tab">Git 提交图</span><span class="x">×</span></div>
+          <div class="stage" data-stage="current"></div>
+        </div>
+        <span class="measure" data-measure="current"></span>
+      </div>
+      <ul class="notes" style="flex:1;min-width:0">
+        <li class="bad" data-n="1"><b>数字跟着每个类型跑</b>：五个标签各带一个计数，4px 间距把它们黏成「全部2 文档2 表格0 图片0 其它0」一句连读，扫不出「哪里可以点」。</li>
+        <li class="bad" data-n="2"><b>三个 0 是纯噪声</b>：这次会话根本没有表格/图片/其它，却各占一个可点区域。</li>
+        <li class="bad" data-n="3"><b>选中态太弱</b>：只有一层几乎看不见的浅底，深浅主题下都靠猜。</li>
+        <li class="bad" data-n="4"><b>两行控件堆叠</b>：头部 38px + 控件区 72px，第一个文件落在面板顶部 110px 处；而这 72px 里的信息量只有「5 个标签 + 1 个输入框」。</li>
+        <li class="bad" data-n="5"><b>搜索框常驻</b>：只有 2 个文件时它也在，一个没有用武之地的输入框却占了最贵的一行。</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== 三个方向 ===================== -->
+  <section class="block">
+    <div class="block-head">
+      <h2>三个方向</h2>
+      <p>三个方向都解决「黏成一句」和「0 值噪声」，差别在保留多少信息、以及省下多少高度。</p>
+      <span class="tag">宽度可切换 · 深浅可切换</span>
+    </div>
+    <div class="row3">
+
+      <!-- A -->
+      <article class="sample">
+        <div class="sample-head"><span class="name">方向 A · 分段式类型</span><span class="badge win">推荐</span></div>
+        <div class="frame" data-frame>
+          <div class="tabs"><span class="tab">文件</span><span class="tab active">产出物 <i>2</i></span><span class="tab">Git 提交图</span><span class="x">×</span></div>
+          <div class="stage" data-stage="a"></div>
+        </div>
+        <span class="measure" data-measure="a"></span>
+        <ul class="notes">
+          <li class="good" data-n="1">类型收进一条<b>浅底分段槽</b>，选中项浮起来，一眼看出「这是一组单选」。</li>
+          <li class="good" data-n="2"><b>计数为 0 的类型自动退场</b>；2 个文档时只剩「全部 / 文档」两段，干净。</li>
+          <li class="good" data-n="3">筛选与搜索间隔 12px，搜索框略降一档视觉权重，主次分开。</li>
+          <li class="bad" data-n="4">类型达到 3 种以上时行内会变长（已有横向滚动兜底）。</li>
+        </ul>
+        <div class="verdict win"><span class="sign">适合</span>：绝大多数会话只有 1–2 种类型，这条改动去掉的正是噪声，改动量也最小。</div>
+      </article>
+
+      <!-- B -->
+      <article class="sample">
+        <div class="sample-head"><span class="name">方向 B · 单行工具条</span></div>
+        <div class="frame" data-frame>
+          <div class="tabs"><span class="tab">文件</span><span class="tab active">产出物 <i>2</i></span><span class="tab">Git 提交图</span><span class="x">×</span></div>
+          <div class="stage" data-stage="b"></div>
+        </div>
+        <span class="measure" data-measure="b"></span>
+        <ul class="notes">
+          <li class="good" data-n="1">类型选择收进「全部 ▾」下拉，和搜索框并成<b>一行</b>，直接省下一整行。</li>
+          <li class="good" data-n="2">下拉里保留全部类型与计数，0 项置灰但仍列出来——层级更清楚。</li>
+          <li class="bad" data-n="3">不点开就看不到有哪些类型，也多一次点击。</li>
+          <li class="bad" data-n="4">要自绘浮层 + 键盘可达性（多约 60 行代码，风险高于 A）。</li>
+        </ul>
+        <div class="verdict"><span class="sign">适合</span>：右栏常被拖得很窄（320 及以下），高度比信息可见性更值钱的时候。</div>
+      </article>
+
+      <!-- C -->
+      <article class="sample">
+        <div class="sample-head"><span class="name">方向 C · 图标分段 + 搜索入头</span></div>
+        <div class="frame" data-frame>
+          <div class="tabs"><span class="tab">文件</span><span class="tab active">产出物 <i>2</i></span><span class="tab">Git 提交图</span><span class="x">×</span></div>
+          <div class="stage" data-stage="c"></div>
+        </div>
+        <span class="measure" data-measure="c"></span>
+        <ul class="notes">
+          <li class="good" data-n="1">类型只留图标（计数进 tooltip、0 项直接禁用变灰），控件区压到<b>一行 39px</b>，列表第一屏多出近两行内容。</li>
+          <li class="good" data-n="2">搜索收进头部放大镜，点开才展开——2 个文件时它不再占位。</li>
+          <li class="bad" data-n="3">图标含义要猜（「三层横线」= 全部），新用户靠 tooltip 才能确认。</li>
+          <li class="bad" data-n="4">搜索变成两步操作，常用搜索的人会觉得变慢。</li>
+        </ul>
+        <div class="verdict"><span class="sign">适合</span>：你几乎总是拖到 320px 用、并且很少搜索的情况；否则不划算。</div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ===================== 怎么选 ===================== -->
+  <section class="block">
+    <div class="block-head">
+      <h2>怎么选</h2>
+      <p>高度只是表象：右栏通常 800px 以上高，缺的不是高度，是「一眼看懂哪儿能点」。</p>
+    </div>
+    <table class="cmp">
+      <tr>
+        <th style="width:14%">方案</th>
+        <th style="width:11%">控件区高度</th>
+        <th style="width:15%">类型可见性</th>
+        <th style="width:13%">搜索</th>
+        <th style="width:13%">改动量 / 风险</th>
+        <th>我的判断</th>
+      </tr>
+      <tr>
+        <td><b>现状</b></td>
+        <td class="num">72px（+38 头部）</td>
+        <td>5 个类型全显示，含 3 个 0 <span class="pill bad">噪声</span></td>
+        <td>常驻一行</td>
+        <td class="num">—</td>
+        <td>五个数字黏成一句连读，选中态几乎看不见。</td>
+      </tr>
+      <tr class="rec">
+        <td><b>方向 A</b> <span class="pill win">推荐</span></td>
+        <td class="num">84px</td>
+        <td>只显示有内容的类型，分段槽 <span class="pill">清晰</span></td>
+        <td>常驻一行</td>
+        <td class="num">CSS + 1 处渲染过滤<br>约 30 行</td>
+        <td>噪声清零、选中态明确，类型始终可见；代价是高度反而多 12px——但右栏不缺这 12px。</td>
+      </tr>
+      <tr>
+        <td><b>方向 B</b></td>
+        <td class="num">46px</td>
+        <td>点开下拉才看到 <span class="pill mid">多一次点击</span></td>
+        <td>常驻一行</td>
+        <td class="num">需自绘浮层 + 键盘可达<br>约 60–90 行 <span class="pill bad">较高</span></td>
+        <td>最省高度；但你右栏高、文件少，省下的高度换不回一次多余点击。</td>
+      </tr>
+      <tr>
+        <td><b>方向 C</b></td>
+        <td class="num">39px</td>
+        <td>图标 + tooltip <span class="pill mid">要猜</span></td>
+        <td>点放大镜才展开</td>
+        <td class="num">约 50 行 <span class="pill mid">中</span></td>
+        <td>最紧凑，也最容易让第一次用的人不知道那排图标是筛选。</td>
+      </tr>
+    </table>
+
+    <div class="callout">
+      <b class="t">推荐：方向 A</b>
+      当前实现的问题本质是<b>信息噪声</b>（5 个标签 + 3 个 0）和<b>选中态太弱</b>，不是高度不够。
+      A 用最小的改动同时解决这两点，并且让类型始终可见；B/C 省下的高度在这个面板里没有收益。
+      如果更想要「极简一行」，B 也可以做，代价是要多写一套浮层交互（键盘方向键、Esc、点外部关闭），
+      这部分需要额外测一轮。
+    </div>
+
+    <div class="ask">
+      <b class="t">需要确认的两件事</b>
+      <ol>
+        <li><b>选哪个方向</b>（推荐 A；若在意「单行」，选 B）。</li>
+        <li><b>0 计数的类型要不要藏</b>：A 默认藏起来（只剩有内容的类型 + 「全部」）；如果希望类型行永远固定五项、位置不跳动，可以改成保留但置灰不可点。</li>
+      </ol>
+    </div>
+  </section>
+
+</main>
+
+<script src="icons.js"></script>
+<script>
+(function () {
+  'use strict'
+
+  /* ---------- 数据：两种真实形态 ---------- */
+  var DATA = {
+    two: [
+      { name: '接口设计说明.html', rel: 'docs/接口设计说明.html', desc: '8 个端点、错误码与调用顺序，一页看完',
+        ext: 'html', size: '39 KB', time: '今天 12:35', source: 'presented' },
+      { name: '迁移计划.md', rel: 'docs/迁移计划.md', desc: '分三步切换，每步的验证方式与回滚点',
+        ext: 'md', size: '12 KB', time: '今天 11:58', source: 'write' }
+    ],
+    mixed: [
+      { name: '示例方案说明.html', rel: 'demo-delivery/示例方案说明.html',
+        desc: '示例：三段式改造说明，含范围声明', ext: 'html', size: '39 KB', time: '昨天 12:35', source: 'presented' },
+      { name: '示例产品设计.html', rel: 'demo-delivery/示例产品设计.html',
+        desc: '示例：设计方案 v6，术语已对齐', ext: 'html', size: '45 KB', time: '昨天 12:35', source: 'presented' },
+      { name: '示例数据汇总.xlsx', rel: 'delivery/示例数据汇总.xlsx', desc: '示例：12 行 × 4 列的汇总表',
+        ext: 'xlsx', size: '88 KB', time: '今天 09:12', source: 'write' },
+      { name: '示例对比图.png', rel: 'delivery/示例对比图.png', desc: '示例：改造前后依赖方向对比',
+        ext: 'png', size: '210 KB', time: '今天 09:30', source: 'write' },
+      { name: '示例上线说明.txt', rel: 'delivery/示例上线说明.txt', desc: '示例：切换步骤与回滚命令',
+        ext: 'txt', size: '2 KB', time: '昨天 18:02', source: 'bash' },
+      { name: '示例索引.html', rel: 'demo-delivery/示例索引.html',
+        desc: '示例：交付物索引页', ext: 'html', size: '13 KB', time: '昨天 12:34', source: 'presented' }
+    ]
+  }
+
+  var KIND_BY_EXT = { html: 'doc', md: 'doc', txt: 'doc', pdf: 'doc', docx: 'doc', xlsx: 'sheet', csv: 'sheet', png: 'image', jpg: 'image', gif: 'image', zip: 'other' }
+  var ICON_BY_EXT = { html: 'html', md: 'markdown', txt: 'other', pdf: 'pdf', docx: 'word', xlsx: 'excel', csv: 'excel', png: 'image', jpg: 'image', gif: 'image', zip: 'other' }
+  var TYPE_LABEL = { html: 'HTML', md: 'Markdown', txt: '文本', pdf: 'PDF', docx: 'Word', xlsx: 'Excel', csv: 'CSV', png: 'PNG', jpg: 'JPG', gif: 'GIF', zip: 'ZIP' }
+  var SOURCE_LABEL = { presented: '显式交付', write: '本次对话生成', edit: '本次对话生成', bash: '脚本生成', reply: '对话中提到的文件' }
+  var FILTERS = [['all', '全部'], ['doc', '文档'], ['sheet', '表格'], ['image', '图片'], ['other', '其它']]
+
+  var state = {
+    theme: 'dark',
+    width: 360,
+    data: 'two',
+    panels: {
+      current: { filter: 'all', query: '', menuOpen: false, searchOpen: false, hoverRow: 0 },
+      a: { filter: 'all', query: '', menuOpen: false, searchOpen: false },
+      b: { filter: 'all', query: '', menuOpen: true, searchOpen: false },
+      c: { filter: 'all', query: '', menuOpen: false, searchOpen: false }
+    }
+  }
+
+  function kindOf(item) { return KIND_BY_EXT[item.ext] || 'other' }
+  function esc(text) {
+    return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  }
+  function icon(type, size) {
+    var raw = window.dshFileIcon(type, size || 16)
+    return raw.replace('class="fic fic-' + type + '"', 'class="dsout-fic dsout-fic-' + type + '"')
+  }
+  function items() { return DATA[state.data] }
+
+  var GLYPH = {
+    search: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="7.1" cy="7.1" r="4.1"/><path d="m10.2 10.2 2.6 2.6"/></svg>',
+    close: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6"/></svg>',
+    refresh: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8a5 5 0 1 1-1.46-3.54"/><path d="M13 2.7v2.9H10.1"/></svg>',
+    info: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><circle cx="8" cy="8" r="5.8"/><path d="M8 7.4v3.4M8 5.2v.1"/></svg>',
+    caret: '<svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg>',
+    tick: '<svg class="tick" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11.5 12.5 5"/></svg>',
+    all: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h7"/></svg>',
+    // 方向 C 的五个单色字形（与 DSH 线性图标同风格，避免彩色文件图标互相打架）
+    gDoc: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 2.6h4.2L12.6 6.5v6.9H4.5z"/><path d="M8.6 2.6v4h4"/></svg>',
+    gSheet: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="3.2" width="10.8" height="9.6" rx="1.3"/><path d="M2.6 6.6h10.8M6.6 6.6v6.2"/></svg>',
+    gImage: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="3.2" width="10.8" height="9.6" rx="1.3"/><circle cx="6" cy="6.6" r="1"/><path d="M3.4 11.9 6.6 8.9l1.9 1.9 1.8-1.8 1.9 2"/></svg>',
+    gOther: '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="4" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="12" cy="8" r="1.2"/></svg>'
+  }
+
+  /* ---------- 片段 ---------- */
+  function head(panel, total) {
+    return '<div class="dsout-head">' +
+      '<span class="dsout-title">产出物</span>' +
+      '<span class="dsout-count-pill">' + total + '</span>' +
+      '<span class="dsout-run-dot" title="会话运行中，自动刷新"></span>' +
+      '<span class="dsout-head-actions">' +
+        (panel === 'c'
+          ? '<button type="button" class="dsout-iconbtn" data-act="toggle-search" data-panel="c" title="搜索">' + GLYPH.search + '</button>'
+          : '') +
+        '<button type="button" class="dsout-iconbtn" title="刷新列表">' + GLYPH.refresh + '</button>' +
+      '</span>' +
+    '</div>'
+  }
+
+  function filtersRow(variant, st, counts) {
+    var html = '<div class="dsout-filters">'
+    for (var i = 0; i < FILTERS.length; i++) {
+      var kind = FILTERS[i][0], label = FILTERS[i][1]
+      var n = counts[kind]
+      // A：只渲染有内容的类型（当前选中的即便 0 也保留，避免选中态消失）
+      if (variant === 'a' && kind !== 'all' && n === 0 && st.filter !== kind) continue
+      html += '<button type="button" class="dsout-chip" aria-pressed="' + (st.filter === kind) + '"' +
+        ' data-act="filter" data-panel="' + variant + '" data-kind="' + kind + '">' +
+        label + '<span class="dsout-chip-n">' + n + '</span></button>'
+    }
+    return html + '</div>'
+  }
+
+  function searchRow(st, variant, withPadding) {
+    return '<div class="dsout-searchrow"' + (withPadding === false ? ' style="flex:1;min-width:0;padding:0"' : '') + '>' +
+      '<div class="dsout-searchbox">' + GLYPH.search +
+        '<input class="dsout-search" type="text" value="' + esc(st.query) + '" placeholder="搜索文件名或路径"' +
+        ' spellcheck="false" autocomplete="off" data-search="' + variant + '">' +
+        (st.query !== ''
+          ? '<button type="button" class="dsout-search-clear" data-act="clear-search" data-panel="' + variant + '" title="清空搜索"></button>'
+          : '') +
+      '</div>' +
+    '</div>'
+  }
+
+  function toolbarB(st, counts) {
+    var current = FILTERS.filter(function (f) { return f[0] === st.filter })[0]
+    var html = '<div class="dsout-toolbar">' +
+      '<button type="button" class="dsout-select" aria-expanded="' + st.menuOpen + '" data-act="toggle-menu" data-panel="b">' +
+        esc(current[1]) + ' <span class="dsout-chip-n">' + counts[current[0]] + '</span>' + GLYPH.caret +
+      '</button>' +
+      searchRow(st, 'b', false) +
+    '</div>'
+    if (st.menuOpen) {
+      html += '<div class="dsout-menu" role="menu">'
+      for (var i = 0; i < FILTERS.length; i++) {
+        var kind = FILTERS[i][0], label = FILTERS[i][1], n = counts[kind]
+        html += '<button type="button" class="dsout-menu-item' + (n === 0 && kind !== 'all' ? ' is-zero' : '') + '"' +
+          ' role="menuitemradio" aria-checked="' + (st.filter === kind) + '"' +
+          ' data-act="filter" data-panel="b" data-kind="' + kind + '">' +
+          (st.filter === kind ? GLYPH.tick : '<span style="width:12px"></span>') +
+          label + '<span class="n">' + n + '</span></button>'
+      }
+      html += '</div>'
+    }
+    return html
+  }
+
+  function filterBarC(st, counts) {
+    var html = '<div class="dsout-filterbar">'
+    for (var i = 0; i < FILTERS.length; i++) {
+      var kind = FILTERS[i][0], label = FILTERS[i][1], n = counts[kind]
+      var glyph = kind === 'all' ? GLYPH.all
+        : kind === 'doc' ? GLYPH.gDoc : kind === 'sheet' ? GLYPH.gSheet
+        : kind === 'image' ? GLYPH.gImage : GLYPH.gOther
+      html += '<button type="button" class="dsout-seg' + (kind === 'all' ? ' dsout-seg-all' : '') + '"' +
+        ' aria-pressed="' + (st.filter === kind) + '" title="' + label + '（' + n + '）"' +
+        ' data-act="filter" data-panel="c" data-kind="' + kind + '">' + glyph +
+        (n > 0 ? '<span class="n">' + n + '</span>' : '') + '</button>'
+    }
+    return html + '</div>'
+  }
+
+  function rowHtml(item) {
+    var kind = kindOf(item)
+    return '<div class="dsout-row" role="button" tabindex="0">' +
+      '<span class="dsout-row-icon">' + icon(ICON_BY_EXT[item.ext] || 'other', 16) + '</span>' +
+      '<span class="dsout-row-main">' +
+        '<span class="dsout-row-name" title="' + esc(item.name) + '">' + esc(item.name) + '</span>' +
+        '<span class="dsout-row-path" title="' + esc(item.rel) + '">' + esc(item.rel) + '</span>' +
+        '<span class="dsout-row-desc" title="' + esc(item.desc) + '">' + esc(item.desc) + '</span>' +
+        '<span class="dsout-row-meta">' +
+          '<span class="dsout-badge' + (item.source === 'presented' ? ' dsout-badge-explicit' : '') + '">' +
+            esc(SOURCE_LABEL[item.source]) + '</span>' +
+          '<span class="dsout-sep">·</span>' +
+          '<span class="dsout-meta-type">' + esc(TYPE_LABEL[item.ext] || item.ext.toUpperCase()) +
+            '<span class="dsout-sep">·</span></span>' +
+          '<span>' + esc(item.size) + '</span>' +
+          '<span class="dsout-sep">·</span>' +
+          '<span class="dsout-meta-time">' + esc(item.time) + '</span>' +
+        '</span>' +
+      '</span>' +
+    '</div>'
+  }
+
+  function bodyHtml(variant, st) {
+    var list = items()
+    var keyword = st.query.trim().toLowerCase()
+    var visible = list.filter(function (item) {
+      if (st.filter !== 'all' && kindOf(item) !== st.filter) return false
+      if (!keyword) return true
+      return item.name.toLowerCase().indexOf(keyword) >= 0 || item.rel.toLowerCase().indexOf(keyword) >= 0
+    })
+    if (visible.length === 0) {
+      return '<div class="dsout-state">' +
+        '<span class="dsout-state-icon">' + icon('other', 28) + '</span>' +
+        '<span class="dsout-state-title">没有匹配的文件</span>' +
+        '<span class="dsout-state-desc">试试别的文件名或路径关键词。</span>' +
+      '</div>'
+    }
+    return '<div class="dsout-list">' + visible.map(rowHtml).join('') + '</div>'
+  }
+
+  function footHtml(total) {
+    return '<div class="dsout-foot">' + GLYPH.info +
+      '<span class="dsout-foot-text">仅显示交付类文件 · 除显式交付外，源码/配置/临时目录不收录</span>' +
+      '<span class="dsout-foot-count">共 ' + total + ' 个</span>' +
+    '</div>'
+  }
+
+  function controlsHtml(variant, st, counts) {
+    if (variant === 'current') return filtersRow(variant, st, counts) + searchRow(st, variant, true)
+    if (variant === 'a') return filtersRow(variant, st, counts) + searchRow(st, variant, true)
+    if (variant === 'b') return toolbarB(st, counts)
+    // c
+    var html = filterBarC(st, counts)
+    if (st.searchOpen) html += searchRow(st, 'c', true)
+    return html
+  }
+
+  function renderPanel(variant) {
+    var st = state.panels[variant]
+    var list = items()
+    var counts = { all: list.length, doc: 0, sheet: 0, image: 0, other: 0 }
+    for (var i = 0; i < list.length; i++) counts[kindOf(list[i])] += 1
+    return '<div class="dsout-root" data-variant="' + variant + '">' +
+      head(variant, counts.all) +
+      '<div class="dsout-controls">' + controlsHtml(variant, st, counts) + '</div>' +
+      '<div class="dsout-body" style="flex:1;min-height:0;display:flex;flex-direction:column">' + bodyHtml(variant, st) + '</div>' +
+      footHtml(counts.all) +
+    '</div>'
+  }
+
+  /* ---------- 绘制 ---------- */
+  var stages = document.querySelectorAll('[data-stage]')
+
+  function draw() {
+    document.documentElement.style.setProperty('--panel-w', state.width + 'px')
+    for (var i = 0; i < stages.length; i++) {
+      var el = stages[i]
+      var variant = el.getAttribute('data-stage')
+      el.innerHTML = renderPanel(variant)
+      var dark = state.theme === 'dark'
+      if (dark) el.setAttribute('data-ds-dark-theme', '')
+      else el.removeAttribute('data-ds-dark-theme')
+      var frame = el.closest('.frame')
+      if (dark) frame.setAttribute('data-ds-dark-theme', '')
+      else frame.removeAttribute('data-ds-dark-theme')
+      annotate(el, variant)
+    }
+  }
+
+  function annotate(stageEl, variant) {
+    var old = stageEl.querySelector('.gauge')
+    if (old) old.remove()
+    var controls = stageEl.querySelector('.dsout-controls')
+    if (!controls) return
+    var top = controls.offsetTop
+    var h = controls.offsetHeight
+    var gauge = document.createElement('div')
+    gauge.className = 'gauge'
+    gauge.style.top = top + 'px'
+    gauge.style.height = h + 'px'
+    gauge.innerHTML = '<span>控件区 ' + h + 'px</span>'
+    stageEl.appendChild(gauge)
+    var out = document.querySelector('[data-measure="' + variant + '"]')
+    if (out) {
+      var list = stageEl.querySelector('.dsout-list')
+      var firstRow = list ? Math.round(list.firstElementChild.offsetTop + list.firstElementChild.offsetHeight / 2) - 18 : null
+      out.textContent = '控件区 ' + h + 'px' + (firstRow !== null ? ' · 首条内容顶部约 ' + (top + h) + 'px' : '')
+    }
+  }
+
+  /* ---------- 交互 ---------- */
+  document.addEventListener('click', function (event) {
+    var segBtn = event.target.closest('.seg button')
+    if (segBtn) {
+      var group = segBtn.closest('.seg')
+      var key = group.getAttribute('data-ctl')
+      var val = segBtn.getAttribute('data-val')
+      var buttons = group.querySelectorAll('button')
+      for (var i = 0; i < buttons.length; i++) buttons[i].classList.toggle('on', buttons[i] === segBtn)
+      if (key === 'theme') state.theme = val
+      if (key === 'width') state.width = Number(val)
+      if (key === 'data') state.data = val
+      draw()
+      return
+    }
+    var actEl = event.target.closest('[data-act]')
+    if (!actEl) return
+    var act = actEl.getAttribute('data-act')
+    var panel = actEl.getAttribute('data-panel')
+    var st = panel ? state.panels[panel] : null
+    if (!st) return
+    if (act === 'filter') { st.filter = actEl.getAttribute('data-kind'); st.menuOpen = false }
+    else if (act === 'toggle-menu') st.menuOpen = !st.menuOpen
+    else if (act === 'toggle-search') {
+      st.searchOpen = !st.searchOpen
+      draw()
+      var input = document.querySelector('[data-search="' + panel + '"]')
+      if (input && st.searchOpen) input.focus()
+      return
+    } else if (act === 'clear-search') st.query = ''
+    draw()
+  })
+
+  document.addEventListener('input', function (event) {
+    var input = event.target.closest('[data-search]')
+    if (!input) return
+    var panel = input.getAttribute('data-search')
+    var st = state.panels[panel]
+    st.query = input.value
+    var stageEl = document.querySelector('[data-stage="' + panel + '"]')
+    var body = stageEl.querySelector('.dsout-body')
+    if (body) body.innerHTML = bodyHtml(panel, st)
+  })
+
+  // 允许用 query 参数直接打开某个状态（截图 / 分享用）：?theme=light&width=320&data=mixed
+  function syncControls() {
+    var groups = document.querySelectorAll('.seg[data-ctl]')
+    for (var i = 0; i < groups.length; i++) {
+      var key = groups[i].getAttribute('data-ctl')
+      var val = key === 'width' ? String(state.width) : state[key] === undefined ? state.data : state[key]
+      var buttons = groups[i].querySelectorAll('button')
+      for (var j = 0; j < buttons.length; j++) {
+        buttons[j].classList.toggle('on', buttons[j].getAttribute('data-val') === val)
+      }
+    }
+  }
+
+  var params = new URLSearchParams(location.search)
+  if (params.get('theme')) state.theme = params.get('theme')
+  if (params.get('width')) state.width = Number(params.get('width'))
+  if (params.get('data')) state.data = params.get('data')
+  if (params.get('menu') === '0') state.panels.b.menuOpen = false
+  syncControls()
+  draw()
+
+  // 宽度变化时重新测量
+  window.addEventListener('resize', function () {
+    for (var i = 0; i < stages.length; i++) annotate(stages[i], stages[i].getAttribute('data-stage'))
+  })
+})()
+</script>
+</body>
+</html>
