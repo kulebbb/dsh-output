@@ -21,6 +21,9 @@ updates:
       # 类型定义必须跟随 engines 里的 Node 主版本（当前 22），否则会对不上运行时
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # tsdown 还是 0.x，次版本即破坏性变更；升级需重建 lib 后单独评估，只收补丁
+      - dependency-name: "tsdown"
+        update-types: ["version-update:semver-minor"]
 
   # GitHub Actions 用到的 action 版本
   - package-ecosystem: "github-actions"
